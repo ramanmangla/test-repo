@@ -95,7 +95,6 @@ See the [documentation](docs/) for more details:
 - [Data Ingestion](docs/data-ingestion.md)
 - [Observability](docs/observability.md)
 - [CLI Reference](docs/cli/README.md)
-- [CLI Reference](docs/cli/README.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 **Video Walkthrough:** A [20-Minute Video Walkthrough](https://youtu.be/kwRG7cnqSu0) is available, showcasing the previous `e2e-gen-ai-app-starter-pack`. A new walkthrough for the `agent-starter-pack` will be released soon!
