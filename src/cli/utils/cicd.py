@@ -257,6 +257,32 @@ def create_github_connection(
             elif status == "PENDING_USER_OAUTH" or status == "PENDING_INSTALL_APP":
                 if attempt < max_retries - 1:  # Don't print waiting on last attempt
                     console.print("⏳ Waiting for GitHub authorization...")
+                    # Extract and print the action URI for user authentication
+                    try:
+                        action_uri = (
+                            json.loads(result.stdout)
+                            .get("installationState", {})
+                            .get("actionUri")
+                        )
+                        if action_uri:
+                            console.print(
+                                "\n🔑 Authentication Required:", style="bold yellow"
+                            )
+                            console.print(
+                                f"Please visit [link={action_uri}]this page[/link] to authenticate Cloud Build with GitHub:"
+                            )
+                            console.print(f"{action_uri}", style="bold blue")
+                            console.print(
+                                "(Copy and paste the link into your browser if clicking doesn't work)"
+                            )
+                            console.print(
+                                "After completing authentication, return here to continue the setup.\n"
+                            )
+                    except (json.JSONDecodeError, KeyError) as e:
+                        console.print(
+                            f"⚠️ Could not extract authentication link: {e}",
+                            style="yellow",
+                        )
                     time.sleep(10)
                 continue
             else:

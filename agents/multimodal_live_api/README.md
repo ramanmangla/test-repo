@@ -18,42 +18,6 @@ This pattern showcases a real-time conversational RAG agent powered by Google Ge
 
 ![live api demo](https://storage.googleapis.com/github-repo/generative-ai/sample-apps/e2e-gen-ai-app-starter-pack/live_api_pattern_demo.gif)
 
-## Usage
-
-1.  **Install Dependencies:**
-
-    ```bash
-    make install
-    ```
-
-2.  **Start the Backend and Frontend:**
-
-    **Backend:**
-    ```bash
-    make backend
-    ```
-    
-    The backend will be ready when you see `INFO:     Application startup complete.` in the console.
-
-    <details>
-    <summary><b>Click here if you want to use AI Studio and API Key instead of Vertex AI:</b></summary>
-
-    ```bash
-    export VERTEXAI=false
-    export GOOGLE_API_KEY=your-google-api-key
-    ```
-
-    </details>
-    <br>
-    
-    **Frontend:**
-    ```bash
-    # In a different shell
-    make ui
-    ```
-
-    This is the suggested mode for development as it allows you to see changes in real-time.
-
 Once both the backend and frontend are running, click the play button in the frontend UI to establish a connection with the backend. You can now interact with the Multimodal Live Agent! You can try asking questions such as "Using the tool you have, define Governance in the context MLOPs" to allow the agent to use the [documentation](https://cloud.google.com/architecture/deploy-operate-generative-ai-applications) it was provided to.
 
 ## Additional Resources for Multimodal Live API

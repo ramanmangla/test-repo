@@ -2,11 +2,12 @@
 
 Operationalizing Generative AI Agents can be a complex and time-consuming process.  Many developers and organizations face similar challenges, often taking many months to move from a successful Proof of Concept (PoC) to a production-ready GenAI application.  
 
-This starter pack addresses tries those challenges.
+This starter pack tries to address those challenges.
 
 ## The Challenges of Building Production-Ready Agents
+Moving from a prototype to a production-ready, scalable, and secure deployment can be challenging.
+These challenges typically fall into several key areas:
 
-The journey from a promising prototype to a robust, scalable, and secure production deployment is often fraught with hurdles.  These challenges typically fall into several key areas:
 ### Deployment & Operations
 
 *   **Infrastructure:** Scalable & robust infrastructure.

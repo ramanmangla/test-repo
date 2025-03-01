@@ -77,7 +77,9 @@ class GeminiSession:
                 elif "setup" in data:
                     self.run_id = data["setup"]["run_id"]
                     self.user_id = data["setup"]["user_id"]
-                    logging.info(f"Setup data: {data['setup']}")
+                    logger.log_struct(
+                        {**data["setup"], "type": "setup"}, severity="INFO"
+                    )
                 else:
                     logging.warning(f"Received unexpected input from client: {data}")
             except ConnectionClosedError as e:
