@@ -15,20 +15,19 @@
 import os
 from unittest.mock import MagicMock
 
-from langchain_google_community import VertexAISearchRetriever
+from google.cloud import aiplatform
 from langchain_google_community.vertex_rank import VertexAIRank
-from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_google_vertexai import VectorSearchVectorStore, VertexAIEmbeddings
 
 
 def get_retriever(
     project_id: str,
-    data_store_id: str,
-    data_store_region: str,
+    region: str,
+    vector_search_bucket: str,
+    vector_search_index: str,
+    vector_search_index_endpoint: str,
     embedding: VertexAIEmbeddings,
-    embedding_column: str = "embedding",
-    max_documents: int = 10,
-    custom_embedding_ratio: float = 0.5,
-) -> VertexAISearchRetriever:
+) -> VectorSearchVectorStore:
     """
     Creates and returns an instance of the retriever service.
 
@@ -40,22 +39,27 @@ def get_retriever(
         retriever.invoke = lambda x: []
         return retriever
 
-    return VertexAISearchRetriever(
-        project_id=project_id,
-        data_store_id=data_store_id,
-        location_id=data_store_region,
-        engine_data_type=1,
-        # The following parameters are used when you want to search
-        # using custom embeddings in Agent Builder.
-        # The ratio is set to 0.5 by default to use a mix of custom
-        # embeddings but you can adapt the ratio as you need.
-        custom_embedding_ratio=custom_embedding_ratio,
-        custom_embedding=embedding,
-        custom_embedding_field_path=embedding_column,
-        # Extracting 20 documents before re-rank.
-        max_documents=max_documents,
-        beta=True,
+    aiplatform.init(
+        project=project_id,
+        location=region,
+        staging_bucket=f"gs://{vector_search_bucket}",
     )
+
+    my_index = aiplatform.MatchingEngineIndex(vector_search_index)
+
+    my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint(
+        vector_search_index_endpoint
+    )
+
+    return VectorSearchVectorStore.from_components(
+        project_id=project_id,
+        region=region,
+        gcs_bucket_name=vector_search_bucket,
+        index_id=my_index.name,
+        endpoint_id=my_index_endpoint.name,
+        embedding=embedding,
+        stream_update=True,
+    ).as_retriever()
 
 
 def get_compressor(project_id: str, top_n: int = 5) -> VertexAIRank:

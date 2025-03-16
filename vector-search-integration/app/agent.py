@@ -31,15 +31,19 @@ from app.templates import format_docs, inspect_conversation_template, rag_templa
 EMBEDDING_MODEL = "text-embedding-005"
 LOCATION = "us-central1"
 LLM = "gemini-2.0-flash-001"
-EMBEDDING_COLUMN = "embedding"
-TOP_K = 5
 
-data_store_region = os.getenv("DATA_STORE_REGION", "us")
-data_store_id = os.getenv("DATA_STORE_ID", "sample-datastore")
+vector_search_index = os.getenv("VECTOR_SEARCH_INDEX", "2697088828794994688")
+vector_search_index_endpoint = os.getenv(
+    "VECTOR_SEARCH_INDEX_ENDPOINT", "5330498342155714560"
+)
 
 # Initialize Google Cloud and Vertex AI
 credentials, project_id = google.auth.default()
 vertexai.init(project=project_id, location=LOCATION)
+
+vector_search_bucket = os.getenv(
+    "VECTOR_SEARCH_BUCKET", f"{project_id}-vector-search-data"
+)
 
 embedding = VertexAIEmbeddings(
     project=project_id, location=LOCATION, model_name=EMBEDDING_MODEL
@@ -47,11 +51,11 @@ embedding = VertexAIEmbeddings(
 
 retriever = get_retriever(
     project_id=project_id,
-    data_store_id=data_store_id,
-    data_store_region=data_store_region,
+    region=LOCATION,
+    vector_search_bucket=vector_search_bucket,
+    vector_search_index=vector_search_index,
+    vector_search_index_endpoint=vector_search_index_endpoint,
     embedding=embedding,
-    embedding_column=EMBEDDING_COLUMN,
-    max_documents=10,
 )
 compressor = get_compressor(
     project_id=project_id,

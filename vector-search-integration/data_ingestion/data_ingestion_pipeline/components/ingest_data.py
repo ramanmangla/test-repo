@@ -120,7 +120,6 @@ def ingest_data(
         stream_update=True,
     )
 
-    print(vector_store)
     for batch_num, start in enumerate(range(0, len(df), ingestion_batch_size)):
         ids = (
             df.iloc[start : start + ingestion_batch_size]
