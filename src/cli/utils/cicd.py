@@ -315,7 +315,7 @@ class ProjectConfig:
     github_pat: str | None = None
     github_app_installation_id: str | None = None
     git_provider: str = "github"
-    
+
 
 def print_cicd_summary(
     config: ProjectConfig, github_username: str, repo_url: str, cloud_build_url: str

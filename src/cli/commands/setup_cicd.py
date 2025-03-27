@@ -493,8 +493,8 @@ def setup_cicd(
 
     # Only prompt for repository details if not provided via CLI
     if not (repository_name and repository_owner):
-        repository_name, repository_owner, repository_exists = prompt_for_repository_details(
-            repository_name, repository_owner
+        repository_name, repository_owner, repository_exists = (
+            prompt_for_repository_details(repository_name, repository_owner)
         )
     # Set default host connection name if not provided
     if not host_connection_name:
@@ -559,7 +559,7 @@ def setup_cicd(
         github_pat=github_pat,
         github_app_installation_id=github_app_installation_id,
         git_provider=git_provider,
-        repository_exists=repository_exists
+        repository_exists=repository_exists,
     )
 
     tf_dir = Path("deployment/terraform")
