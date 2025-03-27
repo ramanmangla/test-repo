@@ -13,7 +13,10 @@
 # limitations under the License.
 
 # mypy: disable-error-code="union-attr"
+import os
 from unittest.mock import MagicMock, patch
+
+os.environ["INTEGRATION_TEST"] = "TRUE"
 
 from app.agent import agent
 

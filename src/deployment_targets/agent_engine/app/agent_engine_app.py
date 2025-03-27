@@ -215,7 +215,9 @@ if __name__ == "__main__":
         help="GCP project ID (defaults to application default credentials)",
     )
     parser.add_argument(
-        "--location", default="us-central1", help="GCP region (defaults to us-central1)"
+        "--location",
+        default="europe-west4",
+        help="GCP region (defaults to europe-west4)",
     )
     parser.add_argument(
         "--agent-name",

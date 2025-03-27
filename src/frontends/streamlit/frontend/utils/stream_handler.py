@@ -32,8 +32,6 @@ from vertexai.preview import reasoning_engines
 
 from frontend.utils.multimodal_utils import format_content
 
-st.cache_resource.clear()
-
 
 @st.cache_resource
 def get_remote_agent(remote_agent_engine_id: str) -> Any:
@@ -67,16 +65,6 @@ def get_remote_url_config(url: str, authenticate_request: bool) -> dict[str, Any
     }
 
 
-@st.cache_resource()
-def get_local_agent(agent_callable_path: str) -> Any:
-    """Get cached local agent instance."""
-    module_path, class_name = agent_callable_path.rsplit(".", 1)
-    module = importlib.import_module(module_path)
-    agent = getattr(module, class_name)()
-    agent.set_up()
-    return agent
-
-
 class Client:
     """A client for streaming events from a server."""
 
@@ -106,10 +94,14 @@ class Client:
             self.agent = get_remote_agent(remote_agent_engine_id)
             self.url = None
         else:
+            # Force reload all submodules to get latest changes
             self.url = None
             if agent_callable_path is None:
                 raise ValueError("agent_callable_path cannot be None")
-            self.agent = get_local_agent(agent_callable_path)
+            module_path, class_name = agent_callable_path.rsplit(".", 1)
+            module = importlib.import_module(module_path)
+            self.agent = getattr(module, class_name)()
+            self.agent.set_up()
 
     def log_feedback(self, feedback_dict: dict[str, Any], run_id: str) -> None:
         """Log user feedback for a specific run."""
@@ -159,7 +151,7 @@ class Client:
             if self.authenticate_request:
                 headers["Authorization"] = f"Bearer {self.id_token}"
             with requests.post(
-                self.url, json=data, headers=headers, stream=True, timeout=10
+                self.url, json={"input": data}, headers=headers, stream=True, timeout=10
             ) as response:
                 for line in response.iter_lines():
                     if line:
@@ -169,7 +161,7 @@ class Client:
                         except json.JSONDecodeError:
                             print(f"Failed to parse event: {line.decode('utf-8')}")
         elif self.agent is not None:
-            yield from self.agent.stream_query(**data)
+            yield from self.agent.stream_query(input=data)
 
 
 class StreamHandler:
@@ -207,17 +199,17 @@ class EventProcessor:
         self.current_run_id: str | None = None
         self.additional_kwargs: dict[str, Any] = {}
 
-    def process_events(self) -> None:
+    def process_events(self, run_id: str | None = None) -> None:
         """Process events from the stream, handling each event type appropriately."""
         messages = self.st.session_state.user_chats[
             self.st.session_state["session_id"]
         ]["messages"]
-        self.current_run_id = str(uuid.uuid4())
+        self.current_run_id = run_id or str(uuid.uuid4())
         # Set run_id in session state at start of processing
         self.st.session_state["run_id"] = self.current_run_id
         stream = self.client.stream_messages(
             data={
-                "input": {"messages": messages},
+                "messages": messages,
                 "config": {
                     "run_id": self.current_run_id,
                     "metadata": {
