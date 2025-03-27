@@ -248,9 +248,8 @@ resource "google_cloudbuild_trigger" "main_e2e_deployment_test" {
 
   repository_event_config {
     repository = local.repository_path
-    pull_request {
-      branch          = "main"
-      comment_control = "COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY"
+    push {
+      branch = "main"
     }
   }
 
