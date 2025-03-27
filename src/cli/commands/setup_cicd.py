@@ -388,6 +388,12 @@ console = Console()
     is_flag=True,
     help="Skip confirmation prompts and proceed automatically",
 )
+@click.option(
+    "--repository-exists",
+    is_flag=True,
+    default=False,
+    help="Flag indicating if the repository already exists",
+)
 @backoff.on_exception(
     backoff.expo,
     (subprocess.CalledProcessError, click.ClickException),
@@ -409,6 +415,7 @@ def setup_cicd(
     local_state: bool,
     debug: bool,
     auto_approve: bool,
+    repository_exists: bool,
 ) -> None:
     """Set up CI/CD infrastructure using Terraform."""
 
