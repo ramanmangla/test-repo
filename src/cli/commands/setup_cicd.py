@@ -165,11 +165,12 @@ def update_build_triggers(tf_dir: Path) -> None:
 
 def prompt_for_repository_details(
     repository_name: str | None = None, repository_owner: str | None = None
-) -> tuple[str, str]:
+) -> tuple[str, str, bool]:
     """Interactive prompt for repository details with option to use existing repo."""
     # Get current GitHub username as default owner
     result = run_command(["gh", "api", "user", "--jq", ".login"], capture_output=True)
     default_owner = result.stdout.strip()
+    repository_exists = False
 
     if not (repository_name and repository_owner):
         console.print("\n📦 Repository Configuration", style="bold blue")
@@ -193,6 +194,7 @@ def prompt_for_repository_details(
                 )
         else:
             # Existing repository
+            repository_exists = True
             while True:
                 repo_url = click.prompt(
                     "Enter existing repository URL (e.g., https://github.com/owner/repo)"
@@ -234,7 +236,7 @@ def prompt_for_repository_details(
 
     if repository_name is None or repository_owner is None:
         raise ValueError("Repository name and owner must be provided")
-    return repository_name, repository_owner
+    return repository_name, repository_owner, repository_exists
 
 
 def setup_terraform_backend(
@@ -491,7 +493,7 @@ def setup_cicd(
 
     # Only prompt for repository details if not provided via CLI
     if not (repository_name and repository_owner):
-        repository_name, repository_owner = prompt_for_repository_details(
+        repository_name, repository_owner, repository_exists = prompt_for_repository_details(
             repository_name, repository_owner
         )
     # Set default host connection name if not provided
@@ -557,6 +559,7 @@ def setup_cicd(
         github_pat=github_pat,
         github_app_installation_id=github_app_installation_id,
         git_provider=git_provider,
+        repository_exists=repository_exists
     )
 
     tf_dir = Path("deployment/terraform")
@@ -614,6 +617,7 @@ def setup_cicd(
     new_vars["connection_exists"] = (
         "true" if detected_mode == "interactive" else "false"
     )
+    new_vars["repository_exists"] = "true" if config.repository_exists else "false"
 
     # Update or append variables
     with open(env_vars_path, "w") as f:
