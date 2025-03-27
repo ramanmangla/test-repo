@@ -20,8 +20,7 @@ steps:
     args:
       - "-c"
       - |
-        gcloud projects get-iam-policy ags-test-cicd --format=json
-        uv sync --dev --frozen
+        uv sync --frozen
 
   # Run unit tests using pytest
   - name: "europe-west4-docker.pkg.dev/production-ai-template/starter-pack/e2e-tests"
