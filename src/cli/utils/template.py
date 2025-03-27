@@ -339,12 +339,7 @@ def copy_data_ingestion_files(
             f"Copying data processing files from {data_ingestion_src} to {data_ingestion_dst}"
         )
 
-        # Copy all data ingestion files to the template directory
-        # We'll let cookiecutter handle the templating
         copy_files(data_ingestion_src, data_ingestion_dst, overwrite=True)
-
-        # No need to create a config.py file with the data ingestion type
-        # as it will be available through cookiecutter.data_ingestion_type
 
         logging.debug(f"Data ingestion files prepared for datastore: {datastore_type}")
     else:

@@ -47,8 +47,8 @@ uv run data_ingestion_pipeline/submit_pipeline.py \
     --region=$REGION \
     --data-store-region=$DATA_STORE_REGION \
     --data-store-id="sample-datastore" \
-    --service-account="vertexai-pipelines-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --pipeline-root="gs://$PROJECT_ID-pipeline-artifacts" \
+    --service-account="{{cookiecutter.project_name}}-rag@$PROJECT_ID.iam.gserviceaccount.com" \
+    --pipeline-root="gs://$PROJECT_ID-{{cookiecutter.project_name}}-rag" \
     --pipeline-name="data-ingestion-pipeline"
 ```
 {%- elif cookiecutter.datastore_type == "vertex_ai_vector_search" %}
@@ -62,36 +62,12 @@ uv run data_ingestion_pipeline/submit_pipeline.py \
     --region=$REGION \
     --vector-search-index=$VECTOR_SEARCH_INDEX \
     --vector-search-index-endpoint=$VECTOR_SEARCH_INDEX_ENDPOINT \
-    --service-account="vertexai-pipelines-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-    --pipeline-root="gs://$PROJECT_ID-pipeline-artifacts" \
+    --service-account="{{cookiecutter.project_name}}-rag@$PROJECT_ID.iam.gserviceaccount.com" \
+    --pipeline-root="gs://$PROJECT_ID-{{cookiecutter.project_name}}-rag" \
     --pipeline-name="data-ingestion-pipeline"
 ```
 {%- endif %}
-{%- if cookiecutter.datastore_type == "vertex_ai_search" %}
-**Parameter Explanation:**
 
-*   `--project-id`: Your Google Cloud project ID.
-*   `--region`: The region where Vertex AI Pipelines will run (e.g., `us-central1`).
-*   `--data-store-region`: The region for Vertex AI Search operations (e.g., `us` or `eu`).
-*   `--data-store-id`: The ID of your Vertex AI Search datastore.
-*   `--service-account`: The service account email used for pipeline execution.  Ensure this service account has the necessary permissions (e.g., Vertex AI User, Storage Object Admin).
-*   `--pipeline-root`: The Google Cloud Storage (GCS) bucket for storing pipeline artifacts.
-*   `--pipeline-name`: A descriptive name for your pipeline.
-*   `--schedule-only` (Optional): If specified, the pipeline will only be scheduled and not executed immediately. Requires `--cron-schedule`.
-*   `--cron-schedule` (Optional): A cron expression defining the pipeline's schedule (e.g., `"0 9 * * 1"` for every Monday at 9:00 AM UTC).
-{%- elif cookiecutter.datastore_type == "vertex_ai_vector_search" %}
-**Parameter Explanation:**
-
-*   `--project-id`: Your Google Cloud project ID.
-*   `--region`: The region where Vertex AI Pipelines will run (e.g., `us-central1`).
-*   `--vector-search-index`: The Vector search index id.
-*   `--vector-search-index-endpoint`: The Vector search index endpoint id.
-*   `--service-account`: The service account email used for pipeline execution.  Ensure this service account has the necessary permissions (e.g., Vertex AI User, Storage Object Admin).
-*   `--pipeline-root`: The Google Cloud Storage (GCS) bucket for storing pipeline artifacts.
-*   `--pipeline-name`: A descriptive name for your pipeline.
-*   `--schedule-only` (Optional): If specified, the pipeline will only be scheduled and not executed immediately. Requires `--cron-schedule`.
-*   `--cron-schedule` (Optional): A cron expression defining the pipeline's schedule (e.g., `"0 9 * * 1"` for every Monday at 9:00 AM UTC).
-{%- endif %}
 **d. Pipeline Scheduling and Execution:**
 
 The pipeline, by default, executes immediately. To schedule the pipeline for periodic execution without immediate initiation, use the `--schedule-only` flag in conjunction with `--cron-schedule`. If a schedule doesn't exist, it will be created. If a schedule already exists, its cron expression will be updated to the provided value.
