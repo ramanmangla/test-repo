@@ -32,7 +32,7 @@ from app.vector_store import get_vector_store
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
 EMBEDDING_MODEL = "text-embedding-004"
-MODEL_ID = "gemini-2.0-flash-001"
+MODEL_ID = "gemini-2.0-flash-exp"
 URLS = [
     "https://cloud.google.com/architecture/deploy-operate-generative-ai-applications"
 ]
