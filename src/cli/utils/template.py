@@ -78,7 +78,9 @@ def get_available_agents(deployment_target: str | None = None) -> dict:
     """
     # Define priority agents that should appear first
     PRIORITY_AGENTS = [
-        "langgraph_base_react"  # Add other priority agents here as needed
+        "adk_base",
+        "agentic_rag",
+        "langgraph_base_react"
     ]
 
     agents_list = []
@@ -497,22 +499,20 @@ def process_template(
             extra_deps = template_config.get("settings", {}).get(
                 "extra_dependencies", []
             )
-            otel_instrumentations = get_otel_instrumentations(dependencies=extra_deps)
-
             # Get frontend type from template config
             frontend_type = template_config.get("settings", {}).get(
                 "frontend_type", DEFAULT_FRONTEND
             )
-
+            tags = template_config.get("settings", {}).get("tags", ["None"])
             cookiecutter_config = {
                 "project_name": "my-project",
                 "agent_name": agent_name,
                 "package_version": get_current_version(),
                 "agent_description": template_config.get("description", ""),
+                "tags": tags,
                 "deployment_target": deployment_target or "",
                 "frontend_type": frontend_type,
                 "extra_dependencies": [extra_deps],
-                "otel_instrumentations": otel_instrumentations,
                 "data_ingestion": include_data_ingestion,  # Use explicit flag for cookiecutter
                 "datastore_type": datastore if datastore else "",
                 "_copy_without_render": [
@@ -715,16 +715,3 @@ def copy_deployment_files(
         )
     else:
         logging.warning(f"Deployment target directory not found: {deployment_path}")
-
-
-def get_otel_instrumentations(dependencies: list) -> list[list[str]]:
-    """Returns OpenTelemetry instrumentation statements for enabled dependencies."""
-    otel_deps = {
-        "langgraph": "Instruments.LANGCHAIN",
-        "crewai": "Instruments.CREW",
-    }
-    imports = []
-    for dep in dependencies:
-        if any(otel_dep in dep for otel_dep in otel_deps):
-            imports.append(otel_deps[next(key for key in otel_deps if key in dep)])
-    return [imports]

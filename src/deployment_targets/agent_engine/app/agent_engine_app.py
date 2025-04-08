@@ -11,7 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+{% if "adk" in cookiecutter.tags %}
+import datetime
+import json
+import logging
+from collections.abc import Iterable, Mapping, Sequence
+from typing import (
+    Any,
+)
 
+import google.auth
+import vertexai
+from google.adk.agents.run_config import RunConfig, StreamingMode
+from google.adk.events.event import Event
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.cloud import logging as google_cloud_logging
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider, export
+from vertexai import agent_engines
+
+from app.utils.gcs import create_bucket_if_not_exists
+from app.utils.tracing import CloudTraceLoggingSpanExporter
+from app.utils.typing import Config, Feedback, InputChat
+{% else %}
 import datetime
 import json
 import logging
@@ -31,7 +54,7 @@ from vertexai import agent_engines
 from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.tracing import CloudTraceLoggingSpanExporter
 from app.utils.typing import Feedback, InputChat, dumpd, ensure_valid_config
-
+{% endif %}
 
 class AgentEngineApp:
     """Class for managing agent engine functionality."""
@@ -55,7 +78,16 @@ class AgentEngineApp:
 
         logging_client = google_cloud_logging.Client(project=self.project_id)
         self.logger = logging_client.logger(__name__)
+{% if "adk" in cookiecutter.tags %}
+        provider = TracerProvider()
+        processor = export.BatchSpanProcessor(
+            CloudTraceLoggingSpanExporter(project_id=self.project_id)
+        )
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
 
+        self.app_name = "adk-agent"
+{% else %}
         # Initialize Telemetry
         try:
             Traceloop.init(
@@ -66,9 +98,9 @@ class AgentEngineApp:
             )
         except Exception as e:
             logging.error("Failed to initialize Telemetry: %s", str(e))
-
+{% endif %}
         self.runnable = agent
-
+{% if "adk" not in cookiecutter.tags %}
     # Add any additional variables here that should be included in the tracing logs
     def set_tracing_properties(self, config: RunnableConfig | None) -> None:
         """Sets tracing association properties for the current request.
@@ -86,7 +118,64 @@ class AgentEngineApp:
                 "commit_sha": os.environ.get("COMMIT_SHA", "None"),
             }
         )
+{% endif %}
+{% if "adk" in cookiecutter.tags %}
+    def stream_query(
+        self,
+        *,
+        input: dict[str, Any],
+        config: dict[str, Any] | None = None,
+    ) -> Iterable[dict[str, Any]]:
+        """Stream responses from the agent for a given input."""
+        # Ensure config is valid and validate input
+        if config is None:
+            config = {}
+        validated_config = Config.model_validate(config)
+        input_chat = InputChat.model_validate(input)
+        # Set up stateless session service
+        session_service = InMemorySessionService()
+        session = session_service.create_session(
+            app_name=self.app_name,
+            user_id=validated_config.metadata.user_id,
+            session_id=validated_config.metadata.session_id,
+        )
 
+        # Append each historical event to the session
+        for event in input_chat.messages[:-1]:
+            session_service.append_event(session=session, event=event)
+        new_message = input_chat.messages[-1].content
+
+        # Initialize runner with the agent
+        runner = Runner(
+            app_name=self.app_name,
+            agent=self.root_agent,
+            session_service=session_service,
+        )
+
+        # Stream responses
+        for event in runner.run(
+            user_id=validated_config.metadata.user_id,
+            session_id=validated_config.metadata.session_id,
+            new_message=new_message,
+            run_config=RunConfig(streaming_mode=StreamingMode.SSE),
+        ):
+            yield event.model_dump(mode="json")
+
+    def query(
+        self,
+        input: dict[str, Any],
+        config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Process a single input and return the agent's response."""
+        if config is None:
+            config = {}
+        final_response = dict()
+        for event_data in self.stream_query(input=input, config=config):
+            event = Event.model_validate(event_data)
+            if event.is_final_response():
+                final_response = event_data
+        return final_response
+{% else %}
     def stream_query(
         self,
         *,
@@ -107,11 +196,6 @@ class AgentEngineApp:
             dumped_chunk = dumpd(chunk)
             yield dumped_chunk
 
-    def register_feedback(self, feedback: dict[str, Any]) -> None:
-        """Collect and log feedback."""
-        feedback_obj = Feedback.model_validate(feedback)
-        self.logger.log_struct(feedback_obj.model_dump(), severity="INFO")
-
     def query(
         self,
         *,
@@ -123,6 +207,11 @@ class AgentEngineApp:
         config = ensure_valid_config(config)
         self.set_tracing_properties(config=config)
         return dumpd(self.runnable.invoke(input=input, config=config, **kwargs))
+{% endif %}
+    def register_feedback(self, feedback: dict[str, Any]) -> None:
+        """Collect and log feedback."""
+        feedback_obj = Feedback.model_validate(feedback)
+        self.logger.log_struct(feedback_obj.model_dump(), severity="INFO")
 
     def register_operations(self) -> Mapping[str, Sequence]:
         """Registers the operations of the Agent.
@@ -169,7 +258,7 @@ def deploy_agent_engine_app(
     agent_config = {
         "agent_engine": agent,
         "display_name": agent_name,
-        "description": "This is a sample custom application in Agent Engine that uses LangGraph",
+        "description": "{{cookiecutter.agent_description}}",
         "extra_packages": extra_packages,
     }
     logging.info(f"Agent config: {agent_config}")

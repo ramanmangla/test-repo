@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{%- if "adk" in cookiecutter.tags %}
+import uuid
+from typing import (
+    Literal,
+)
+
+from google.adk.events.event import Event
+from pydantic import (
+    BaseModel,
+    Field,
+)
+{%- else %}
 import json
 import uuid
 from typing import (
@@ -31,16 +43,23 @@ from pydantic import (
     BaseModel,
     Field,
 )
+{%- endif %}
+
 
 
 class InputChat(BaseModel):
     """Represents the input for a chat session."""
-
+{% if "adk" in cookiecutter.tags %}
+    messages: list[Event] = Field(
+        ..., description="The chat events representing the current conversation."
+    )
+{% else %}
     messages: list[
         Annotated[HumanMessage | AIMessage | ToolMessage, Field(discriminator="type")]
     ] = Field(
         ..., description="The chat messages representing the current conversation."
     )
+{% endif %}
 
 {% if cookiecutter.deployment_target == 'cloud_run' %}
 class Request(BaseModel):
@@ -63,8 +82,23 @@ class Feedback(BaseModel):
     run_id: str
     log_type: Literal["feedback"] = "feedback"
     service_name: Literal["{{cookiecutter.project_name}}"] = "{{cookiecutter.project_name}}"
+    user_id: str = ""
+
+{% if "adk" in cookiecutter.tags %}
+class Metadata(BaseModel):
+    """Metadata for agent configuration."""
+
+    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    model_config = {"extra": "allow"}
 
 
+class Config(BaseModel):
+    """Configuration for the agent."""
+
+    metadata: Metadata = Field(default_factory=Metadata)
+    tags: list[str] = Field(default_factory=list)
+{% else %}
 def ensure_valid_config(config: RunnableConfig | None) -> RunnableConfig:
     """Ensures a valid RunnableConfig by setting defaults for missing fields."""
     if config is None:
@@ -113,4 +147,5 @@ def dumpd(obj: Any) -> Any:
         Dict/list representation of the object that can be JSON serialized
     """
     return json.loads(dumps(obj))
+{%- endif %}
 {% endif %}

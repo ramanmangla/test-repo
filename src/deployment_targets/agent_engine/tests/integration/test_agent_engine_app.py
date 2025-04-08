@@ -26,8 +26,115 @@ def agent_app() -> AgentEngineApp:
     app.set_up()
     return app
 
-
+{% if "adk" in cookiecutter.tags %}
 def test_agent_stream_query(agent_app: AgentEngineApp) -> None:
+    """
+    Integration test for the agent stream query functionality.
+    Tests that the agent returns valid streaming responses.
+    """
+    input_dict = {
+        "messages": [
+            {
+                "content": {"parts": [{"text": "Test message"}], "role": "user"},
+                "author": "user",
+            },
+            {
+                "content": {
+                    "parts": [{"text": "I'm happy to help with your test message"}],
+                    "role": "model",
+                },
+                "author": "{{cookiecutter.project_name}}",
+            },
+            {
+                "content": {
+                    "parts": [{"text": "What's the weather in San Francisco?"}],
+                    "role": "user",
+                },
+                "author": "user",
+            },
+        ],
+    }
+    events = list(agent_app.stream_query(input=input_dict))
+    assert len(events) > 0, "Expected at least one chunk in response"
+
+    # Check for valid content in the response
+    has_text_content = False
+    for event in events:
+        content = event.get("content")
+        if (
+            content is not None
+            and content.get("parts")
+            and any(part.get("text") for part in content["parts"])
+        ):
+            has_text_content = True
+            break
+
+    assert has_text_content, "Expected at least one event with text content"
+
+
+def test_agent_query(agent_app: AgentEngineApp) -> None:
+    """
+    Integration test for the agent query functionality.
+    Tests that the agent returns valid responses.
+    """
+    agent_name = agent_app.root_agent.name
+    input_dict = {
+        "messages": [
+            {
+                "content": {"parts": [{"text": "Test message"}], "role": "user"},
+                "author": "user",
+            },
+            {
+                "content": {
+                    "parts": [{"text": "I'm happy to help with your test message"}],
+                    "role": "model",
+                },
+                "author": agent_name,
+            },
+            {
+                "content": {
+                    "parts": [{"text": "What's the weather in San Francisco?"}],
+                    "role": "user",
+                },
+                "author": "user",
+            },
+        ],
+    }
+
+    response = agent_app.query(input=input_dict)
+
+    # Validate response has text content
+    assert response.get("content", {}).get("parts"), (
+        "Expected response to have content parts"
+    )
+
+
+def test_agent_feedback(agent_app: AgentEngineApp) -> None:
+    """
+    Integration test for the agent feedback functionality.
+    Tests that feedback can be registered successfully.
+    """
+    feedback_data = {
+        "score": 5,
+        "text": "Great response!",
+        "invocation_id": "test-run-123",
+    }
+
+    # Should not raise any exceptions
+    agent_app.register_feedback(feedback_data)
+
+    # Test invalid feedback
+    with pytest.raises(ValueError):
+        invalid_feedback = {
+            "score": "invalid",  # Score must be numeric
+            "text": "Bad feedback",
+            "invocation_id": "test-run-123",
+        }
+        agent_app.register_feedback(invalid_feedback)
+
+    logging.info("All assertions passed for agent feedback test")
+{% else %}
+ef test_agent_stream_query(agent_app: AgentEngineApp) -> None:
     """
     Integration test for the agent stream query functionality.
     Tests that the agent returns valid streaming responses.
@@ -118,3 +225,4 @@ def test_agent_feedback(agent_app: AgentEngineApp) -> None:
         agent_app.register_feedback(invalid_feedback)
 
     logging.info("All assertions passed for agent feedback test")
+{% endif %}

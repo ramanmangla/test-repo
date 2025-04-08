@@ -117,17 +117,48 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
     """Test the chat stream functionality."""
     logger.info("Starting chat stream test")
 
-    data = {
-        "input": {
-            "messages": [
-                {"type": "human", "content": "Hello, AI!"},
-                {"type": "ai", "content": "Hello!"},
-                {"type": "human", "content": "What is the weather in NY?"},
-            ]
-        },
-        "config": {"metadata": {"user_id": "test-user", "session_id": "test-session"}},
-    }
-
+{% if "adk" in cookiecutter.tags %}
+        data = {
+                "input": {
+                    "messages": [
+                        {
+                            "content": {
+                                "parts": [{"text": "Hello, AI!"}],
+                                "role": "user",
+                            },
+                            "author": "user",
+                        },
+                        {
+                            "content": {"parts": [{"text": "Hello!"}], "role": "model"},
+                            "author": "{{cookiecutter.project_name}}",
+                        },
+                        {
+                            "content": {
+                                "parts": [{"text": "How are you?"}],
+                                "role": "user",
+                            },
+                            "author": "user",
+                        },
+                    ]
+                },
+                "config": {
+                    "metadata": {"user_id": "test-user", "session_id": "test-session"}
+                },
+            }
+{% else %}
+        data = {
+            "input": {
+                "messages": [
+                    {"type": "human", "content": "Hello, AI!"},
+                    {"type": "ai", "content": "Hello!"},
+                    {"type": "human", "content": "Who are you?"},
+                ]
+            },
+            "config": {
+                "metadata": {"user_id": "test-user", "session_id": "test-session"}
+            },
+        }
+{% endif %}
     response = requests.post(
         STREAM_URL, headers=HEADERS, json=data, stream=True, timeout=10
     )
@@ -136,6 +167,21 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
     events = [json.loads(line) for line in response.iter_lines() if line]
     assert events, "No events received from stream"
 
+{%- if "adk" in cookiecutter.tags %}
+    # Check for valid content in the response
+    has_text_content = False
+    for event in events:
+        content = event.get("content")
+        if (
+            content is not None
+            and content.get("parts")
+            and any(part.get("text") for part in content["parts"])
+        ):
+            has_text_content = True
+            break
+
+    assert has_text_content, "Expected at least one event with text content"
+{%- else %}
     # Verify each event is a tuple of message and metadata
     for event in events:
         assert isinstance(event, list), "Event should be a list"
@@ -155,6 +201,7 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
             has_content = True
             break
     assert has_content, "At least one message should have content"
+{%- endif %}
 
 
 def test_chat_stream_error_handling(server_fixture: subprocess.Popen[str]) -> None:
