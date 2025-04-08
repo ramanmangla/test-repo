@@ -1,9 +1,13 @@
-# LangGraph Base React Agent
+# ADK: Minimal Agent Example
 
-A minimal example demonstrating how to build a reactive agent using LangGraph. This agent serves as an excellent starting point for developers looking to implement LangGraph-based solutions.
+> **Powered by ADK:** Agent Development Kit (ADK) empowers developers to build, manage, evaluate, and deploy sophisticated AI agents for complex tasks and workflows.
 
-## Key Features
+This repository showcases a foundational agent built with **ADK**. It serves as aconcise starting point for developers looking to implement ADK based solutions.
 
-- **Simple Architecture**: Shows the basic building blocks of a LangGraph agent
-- **Streaming Support**: Includes streaming response capability using Vertex AI
-- **Sample Tool Integration**: Includes a basic search tool to demonstrate tool usage
+![ADK Logo](./../../docs/images/adk_logo.png)
+
+## Key Feautures
+
+*   **Simple Agent Architecture**: Demonstrates the essential building blocks within ADK.
+*   **Streaming Responses**: Includes Vertex AI integration for real-time output.
+*   **Basic Tool Use**: Features a sample search tool to demonstrate integration. hg
