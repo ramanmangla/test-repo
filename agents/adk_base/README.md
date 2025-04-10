@@ -14,5 +14,5 @@ This repository showcases a foundational agent built with **ADK**. It serves as 
 
 ## Additional Resources
 
-- **ADK Samples**: Explore more examples and use cases in the [ADK Samples Repository](https://github.com/google/adk-samples)
+- **ADK Samples**: Explore more examples and use cases in the [official ADK Samples Repository](https://github.com/google/adk-samples)
 - **ADK Documentation**: Learn more about ADK concepts and capabilities in the [official documentation](https://google.github.io/adk-docs/)

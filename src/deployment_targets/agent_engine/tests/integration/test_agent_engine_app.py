@@ -64,7 +64,7 @@ def test_agent_stream_query(agent_app: AgentEngineApp) -> None:
         if (
             content is not None
             and content.parts
-            and any(part.text for part in content.part)
+            and any(part.text for part in content.parts)
         ):
             has_text_content = True
             break

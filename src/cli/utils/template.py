@@ -77,11 +77,7 @@ def get_available_agents(deployment_target: str | None = None) -> dict:
         deployment_target: Optional deployment target to filter agents
     """
     # Define priority agents that should appear first
-    PRIORITY_AGENTS = [
-        "adk_base",
-        "agentic_rag",
-        "langgraph_base_react"
-    ]
+    PRIORITY_AGENTS = ["adk_base", "agentic_rag", "langgraph_base_react"]
 
     agents_list = []
     priority_agents = []
