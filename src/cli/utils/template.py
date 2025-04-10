@@ -519,7 +519,7 @@ def process_template(
                     "*.ipynb",  # Don't render notebooks
                     "*.json",  # Don't render JSON files
                     "frontend/*",  # Don't render frontend directory
-                    "tests/*",  # Don't render tests directory
+                    # "tests/*",  # Don't render tests directory
                     "notebooks/*",  # Don't render notebooks directory
                     ".git/*",  # Don't render git directory
                     "__pycache__/*",  # Don't render cache

@@ -13,16 +13,27 @@
 # limitations under the License.
 
 {%- if "adk" in cookiecutter.tags %}
+{%- if cookiecutter.deployment_target == 'cloud_run' %}
 import uuid
 from typing import (
     Literal,
 )
 
 from google.adk.events.event import Event
+from google.genai.types import Content
 from pydantic import (
     BaseModel,
     Field,
 )
+{%- else %}
+from typing import (
+    Literal,
+)
+
+from pydantic import (
+    BaseModel,
+)
+{%- endif %}
 {%- else %}
 import json
 import uuid
@@ -46,22 +57,33 @@ from pydantic import (
 {%- endif %}
 
 
+{%- if "adk" in cookiecutter.tags %}
+{%- if cookiecutter.deployment_target == 'cloud_run' %}
+
+
+class Request(BaseModel):
+    """Represents the input for a chat request with optional configuration."""
+
+    message: Content
+    events: list[Event]
+    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+    model_config = {"extra": "allow"}
+{%- endif %}
+{%- else %}
+
 
 class InputChat(BaseModel):
     """Represents the input for a chat session."""
-{% if "adk" in cookiecutter.tags %}
-    messages: list[Event] = Field(
-        ..., description="The chat events representing the current conversation."
-    )
-{% else %}
+
     messages: list[
         Annotated[HumanMessage | AIMessage | ToolMessage, Field(discriminator="type")]
     ] = Field(
         ..., description="The chat messages representing the current conversation."
     )
-{% endif %}
 
-{% if cookiecutter.deployment_target == 'cloud_run' %}
+
 class Request(BaseModel):
     """Represents the input for a chat request with optional configuration.
 
@@ -73,32 +95,24 @@ class Request(BaseModel):
     input: InputChat
     config: RunnableConfig | None = None
 
-{% endif %}
+{%- endif %}
+
+
 class Feedback(BaseModel):
     """Represents feedback for a conversation."""
 
     score: int | float
     text: str | None = ""
+{%- if "adk" in cookiecutter.tags %}
+    invocation_id: str
+{%- else %}
     run_id: str
+{%- endif %}
     log_type: Literal["feedback"] = "feedback"
     service_name: Literal["{{cookiecutter.project_name}}"] = "{{cookiecutter.project_name}}"
     user_id: str = ""
+{% if "adk" not in cookiecutter.tags %}
 
-{% if "adk" in cookiecutter.tags %}
-class Metadata(BaseModel):
-    """Metadata for agent configuration."""
-
-    user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    model_config = {"extra": "allow"}
-
-
-class Config(BaseModel):
-    """Configuration for the agent."""
-
-    metadata: Metadata = Field(default_factory=Metadata)
-    tags: list[str] = Field(default_factory=list)
-{% else %}
 def ensure_valid_config(config: RunnableConfig | None) -> RunnableConfig:
     """Ensures a valid RunnableConfig by setting defaults for missing fields."""
     if config is None:
@@ -133,7 +147,8 @@ def dumps(obj: Any) -> str:
         JSON string representation of the object
     """
     return json.dumps(obj, default=default_serialization)
-{% if cookiecutter.deployment_target == 'agent_engine' %}
+{%- if cookiecutter.deployment_target == 'agent_engine' %}
+
 
 def dumpd(obj: Any) -> Any:
     """

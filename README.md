@@ -53,6 +53,9 @@ agent-starter-pack create my-agent -d agent_engine -a adk_base
 
 **More agents are on the way!** We are continuously expanding our [agent library](./agents/).  Have a specific agent type in mind?  [Contribute!](#contributing)
 
+**🔍 ADK Samples**
+
+Looking to explore more ADK examples? Check out the [ADK Samples Repository](https://github.com/google/adk-samples) for additional examples and use cases demonstrating ADK's capabilities.
 
 #### Extra Features
 

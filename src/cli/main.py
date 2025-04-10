@@ -47,8 +47,8 @@ def print_version(ctx: click.Context, param: click.Parameter, value: bool) -> No
 )
 def cli() -> None:
     # Check for updates at startup
-    display_update_message()
-
+    # display_update_message()
+    pass
 
 # Register commands
 cli.add_command(create)

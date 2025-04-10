@@ -12,10 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-description: "An agent implementing a base ReAct agent using Google's Agent Development Kit"
-settings:
-  requires_data_ingestion: false
-  deployment_targets: ["agent_engine", "cloud_run"]
-  extra_dependencies: ["google-adk~=0.0.2"]
-  tags: ["adk"]
-  frontend_type: "streamlit_adk"
+MARKDOWN_STR = """
+<style>
+button[kind="primary"] {
+    background: none!important;
+    border: 0;
+    padding: 20!important;
+    color: grey !important;
+    text-decoration: none;
+    cursor: pointer;
+    border: none !important;
+    # float: right;
+}
+button[kind="primary"]:hover {
+    text-decoration: none;
+    color: white !important;
+}
+button[kind="primary"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    color:  !important;
+}
+</style>
+"""

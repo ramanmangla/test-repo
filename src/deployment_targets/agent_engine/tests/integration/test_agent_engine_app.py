@@ -15,6 +15,9 @@
 import logging
 
 import pytest
+{%- if "adk" in cookiecutter.tags %}
+from google.adk.events.event import Event
+{%- endif %}
 
 from app.agent_engine_app import AgentEngineApp
 
@@ -32,39 +35,36 @@ def test_agent_stream_query(agent_app: AgentEngineApp) -> None:
     Integration test for the agent stream query functionality.
     Tests that the agent returns valid streaming responses.
     """
-    input_dict = {
-        "messages": [
-            {
-                "content": {"parts": [{"text": "Test message"}], "role": "user"},
-                "author": "user",
-            },
-            {
-                "content": {
-                    "parts": [{"text": "I'm happy to help with your test message"}],
-                    "role": "model",
-                },
-                "author": "{{cookiecutter.project_name}}",
-            },
-            {
-                "content": {
-                    "parts": [{"text": "What's the weather in San Francisco?"}],
-                    "role": "user",
-                },
-                "author": "user",
-            },
-        ],
+    # Create message and events for the stream_query
+    message = {
+        "parts": [{"text": "What's the weather in San Francisco?"}],
+        "role": "user",
     }
-    events = list(agent_app.stream_query(input=input_dict))
+    events = [
+        {
+            "content": {"parts": [{"text": "Test message"}], "role": "user"},
+            "author": "user",
+        },
+        {
+            "content": {
+                "parts": [{"text": "I'm happy to help with your test message"}],
+                "role": "model",
+            },
+            "author": "root_agent",
+        },
+    ]
+    events = list(agent_app.stream_query(message=message, events=events))
     assert len(events) > 0, "Expected at least one chunk in response"
 
     # Check for valid content in the response
     has_text_content = False
     for event in events:
-        content = event.get("content")
+        validated_event = Event.model_validate(event)
+        content = validated_event.content
         if (
             content is not None
-            and content.get("parts")
-            and any(part.get("text") for part in content["parts"])
+            and content.parts
+            and any(part.text for part in content.part)
         ):
             has_text_content = True
             break
@@ -77,31 +77,25 @@ def test_agent_query(agent_app: AgentEngineApp) -> None:
     Integration test for the agent query functionality.
     Tests that the agent returns valid responses.
     """
-    agent_name = agent_app.root_agent.name
-    input_dict = {
-        "messages": [
-            {
-                "content": {"parts": [{"text": "Test message"}], "role": "user"},
-                "author": "user",
-            },
-            {
-                "content": {
-                    "parts": [{"text": "I'm happy to help with your test message"}],
-                    "role": "model",
-                },
-                "author": agent_name,
-            },
-            {
-                "content": {
-                    "parts": [{"text": "What's the weather in San Francisco?"}],
-                    "role": "user",
-                },
-                "author": "user",
-            },
-        ],
+    # Create message and events for the stream_query
+    message = {
+        "parts": [{"text": "What's the weather in San Francisco?"}],
+        "role": "user",
     }
-
-    response = agent_app.query(input=input_dict)
+    events = [
+        {
+            "content": {"parts": [{"text": "Test message"}], "role": "user"},
+            "author": "user",
+        },
+        {
+            "content": {
+                "parts": [{"text": "I'm happy to help with your test message"}],
+                "role": "model",
+            },
+            "author": "root_agent",
+        },
+    ]
+    response = agent_app.query(message=message, events=events)
 
     # Validate response has text content
     assert response.get("content", {}).get("parts"), (
@@ -134,7 +128,7 @@ def test_agent_feedback(agent_app: AgentEngineApp) -> None:
 
     logging.info("All assertions passed for agent feedback test")
 {% else %}
-ef test_agent_stream_query(agent_app: AgentEngineApp) -> None:
+def test_agent_stream_query(agent_app: AgentEngineApp) -> None:
     """
     Integration test for the agent stream query functionality.
     Tests that the agent returns valid streaming responses.

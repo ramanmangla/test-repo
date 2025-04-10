@@ -116,48 +116,37 @@ def server_fixture(request: Any) -> Iterator[subprocess.Popen[str]]:
 def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
     """Test the chat stream functionality."""
     logger.info("Starting chat stream test")
-
 {% if "adk" in cookiecutter.tags %}
-        data = {
-                "input": {
-                    "messages": [
-                        {
-                            "content": {
-                                "parts": [{"text": "Hello, AI!"}],
-                                "role": "user",
-                            },
-                            "author": "user",
-                        },
-                        {
-                            "content": {"parts": [{"text": "Hello!"}], "role": "model"},
-                            "author": "{{cookiecutter.project_name}}",
-                        },
-                        {
-                            "content": {
-                                "parts": [{"text": "How are you?"}],
-                                "role": "user",
-                            },
-                            "author": "user",
-                        },
-                    ]
+    data = {
+        "message": {
+            "parts": [{"text": "What's the weather in San Francisco?"}],
+            "role": "user",
+        },
+        "events": [
+            {
+                "content": {"parts": [{"text": "Test message"}], "role": "user"},
+                "author": "user",
+            },
+            {
+                "content": {
+                    "parts": [{"text": "I'm happy to help with your test message"}],
+                    "role": "model",
                 },
-                "config": {
-                    "metadata": {"user_id": "test-user", "session_id": "test-session"}
-                },
-            }
+                "author": "root_agent",
+            },
+        ],
+    }
 {% else %}
-        data = {
-            "input": {
-                "messages": [
-                    {"type": "human", "content": "Hello, AI!"},
-                    {"type": "ai", "content": "Hello!"},
-                    {"type": "human", "content": "Who are you?"},
-                ]
-            },
-            "config": {
-                "metadata": {"user_id": "test-user", "session_id": "test-session"}
-            },
-        }
+    data = {
+        "input": {
+            "messages": [
+                {"type": "human", "content": "Hello, AI!"},
+                {"type": "ai", "content": "Hello!"},
+                {"type": "human", "content": "Who are you?"},
+            ]
+        },
+        "config": {"metadata": {"user_id": "test-user", "session_id": "test-session"}},
+    }
 {% endif %}
     response = requests.post(
         STREAM_URL, headers=HEADERS, json=data, stream=True, timeout=10
@@ -207,7 +196,6 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
 def test_chat_stream_error_handling(server_fixture: subprocess.Popen[str]) -> None:
     """Test the chat stream error handling."""
     logger.info("Starting chat stream error handling test")
-
     data = {
         "input": {"messages": [{"type": "invalid_type", "content": "Cause an error"}]}
     }
@@ -229,7 +217,11 @@ def test_collect_feedback(server_fixture: subprocess.Popen[str]) -> None:
     # Create sample feedback data
     feedback_data = {
         "score": 4,
+{%- if "adk" in cookiecutter.tags %}
+        "invocation_id": str(uuid.uuid4()),
+{%- else %}
         "run_id": str(uuid.uuid4()),
+{%- endif %}
         "text": "Great response!",
     }
 

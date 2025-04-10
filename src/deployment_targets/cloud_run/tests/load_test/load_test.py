@@ -30,32 +30,26 @@ class ChatStreamUser(HttpUser):
         headers = {"Content-Type": "application/json"}
         if os.environ.get("_ID_TOKEN"):
             headers["Authorization"] = f"Bearer {os.environ['_ID_TOKEN']}"
-
 {% if "adk" in cookiecutter.tags %}
         data = {
-                "input": {
-                    "messages": [
-                        {
-                            "content": {
-                                "parts": [{"text": "Hello, AI!"}],
-                                "role": "user",
-                            },
-                            "author": "user",
-                        },
-                        {
-                            "content": {"parts": [{"text": "Hello!"}], "role": "model"},
-                            "author": "{{cookiecutter.project_name}}",
-                        },
-                        {
-                            "content": {
-                                "parts": [{"text": "How are you?"}],
-                                "role": "user",
-                            },
-                            "author": "user",
-                        },
-                    ]
+            "message": {
+                "parts": [{"text": "What's the weather in San Francisco?"}],
+                "role": "user",
+            },
+            "events": [
+                {
+                    "content": {"parts": [{"text": "Test message"}], "role": "user"},
+                    "author": "user",
                 },
-            }
+                {
+                    "content": {
+                        "parts": [{"text": "I'm happy to help with your test message"}],
+                        "role": "model",
+                    },
+                    "author": "root_agent",
+                },
+            ],
+        }
 {% else %}
         data = {
             "input": {
@@ -70,7 +64,6 @@ class ChatStreamUser(HttpUser):
             },
         }
 {% endif %}
-
         start_time = time.time()
 
         with self.client.post(

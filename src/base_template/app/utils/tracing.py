@@ -87,14 +87,17 @@ class CloudTraceLoggingSpanExporter(CloudTraceSpanExporter):
 
             # Log the span data to Google Cloud Logging
 {%- if "adk" in cookiecutter.tags %}
-            self.logger.log_struct(span_dict, severity="INFO")
-{%- else %}
             self.logger.log_struct(
                 span_dict,
-                labels={"type": "agent_telemetry", "agent": "{{cookiecutter.project_name}}"},
+                labels={
+                    "type": "agent_telemetry",
+                    "service_name": "{{cookiecutter.project_name}}",
+                },
                 severity="INFO",
             )
-{%- endif %}  
+{%- else %}
+            self.logger.log_struct(span_dict, severity="INFO")
+{%- endif %}
         # Export spans to Google Cloud Trace using the parent class method
         return super().export(spans)
 
