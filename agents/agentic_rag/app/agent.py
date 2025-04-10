@@ -53,9 +53,15 @@ retriever = get_retriever(
     max_documents=10,
 )
 {% elif cookiecutter.datastore_type == "vertex_ai_vector_search" %}
-vector_search_index = os.getenv("VECTOR_SEARCH_INDEX", "{{cookiecutter.project_name}}-vector-search")
-vector_search_index_endpoint = os.getenv("VECTOR_SEARCH_INDEX_ENDPOINT", "{{cookiecutter.project_name}}-vector-search-endpoint")
-vector_search_bucket = os.getenv("VECTOR_SEARCH_BUCKET", f"{project_id}-{{cookiecutter.project_name}}-vs")
+vector_search_index = os.getenv(
+    "VECTOR_SEARCH_INDEX", "{{cookiecutter.project_name}}-vector-search"
+)
+vector_search_index_endpoint = os.getenv(
+    "VECTOR_SEARCH_INDEX_ENDPOINT", "{{cookiecutter.project_name}}-vector-search-endpoint"
+)
+vector_search_bucket = os.getenv(
+    "VECTOR_SEARCH_BUCKET", f"{project_id}-{{cookiecutter.project_name}}-vs"
+)
 
 retriever = get_retriever(
     project_id=project_id,
