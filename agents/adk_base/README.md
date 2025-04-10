@@ -1,16 +1,12 @@
 # ADK: Minimal Agent Example
 
-> **Powered by ADK:** Agent Development Kit (ADK) empowers developers to build, manage, evaluate, and deploy sophisticated AI agents for complex tasks and workflows.
+[![ADK Logo](./../../docs/images/adk_logo.png)](https://google.github.io/adk-docs/)
 
-This repository showcases a foundational agent built with **ADK**. It serves as a concise starting point for developers looking to implement ADK based solutions.
+A basic agent built using the **[Google Agent Development Kit (ADK)](https://google.github.io/adk-docs/)**. This example demonstrates core ADK concepts like agent creation and tool integration in a minimal setup.
 
-![ADK Logo](./../../docs/images/adk_logo.png)
-
-## Key Features
-
-*   **Simple Agent Architecture**: Demonstrates the essential building blocks within ADK.
-*   **Streaming Responses**: Includes Vertex AI integration for real-time output.
-*   **Basic Tool Use**: Features a sample search tool to demonstrate integration.
+This agent uses the `gemini-2.0-flash` model and is equipped with two simple tools:
+*   `get_weather`: Simulates fetching weather (hardcoded for SF).
+*   `get_current_time`: Simulates fetching the time (hardcoded for SF).
 
 ## Additional Resources
 
