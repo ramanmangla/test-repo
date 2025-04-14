@@ -21,6 +21,7 @@ from google.adk.events.event import Event
 from app.agent import root_agent
 from app.agent_engine_app import AgentEngineApp
 {%- else %}
+
 from app.agent_engine_app import AgentEngineApp
 {%- endif %}
 

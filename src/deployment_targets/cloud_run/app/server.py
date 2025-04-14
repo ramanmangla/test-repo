@@ -36,7 +36,7 @@ app: FastAPI = get_fast_api_app(agent_dir=AGENT_DIR, web=False)
 
 app.title = "{{cookiecutter.project_name}}"
 app.description = "API for interacting with the Agent {{cookiecutter.project_name}}"
-{% else %}
+{%- else %}
 import logging
 import os
 from collections.abc import Generator
@@ -65,7 +65,7 @@ try:
         app_name=app.title,
         disable_batch=False,
         exporter=CloudTraceLoggingSpanExporter(),
-        instruments={Instruments.LANGCHAIN, Instruments.CREW},,
+        instruments={Instruments.LANGCHAIN, Instruments.CREW},
     )
 except Exception as e:
     logging.error("Failed to initialize Telemetry: %s", str(e))
@@ -131,6 +131,7 @@ def stream_chat_events(request: Request) -> StreamingResponse:
         media_type="text/event-stream",
     )
 {%- endif %}
+
 
 @app.post("/feedback")
 def collect_feedback(feedback: Feedback) -> dict[str, str]:

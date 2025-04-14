@@ -79,6 +79,7 @@ from app.utils.gcs import create_bucket_if_not_exists
 from app.utils.tracing import CloudTraceLoggingSpanExporter
 from app.utils.typing import Feedback, InputChat, dumpd, ensure_valid_config
 
+
 class AgentEngineApp:
     """Class for managing agent engine functionality."""
 
@@ -98,6 +99,7 @@ class AgentEngineApp:
 
         # Lazy import agent at setup time to avoid deployment dependencies
         from app.agent import agent
+
         logging_client = google_cloud_logging.Client(project=self.project_id)
         self.logger = logging_client.logger(__name__)
 

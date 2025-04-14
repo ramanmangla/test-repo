@@ -19,8 +19,11 @@ import time
 import uuid
 
 import requests
-{% endif -%}
 from locust import HttpUser, between, task
+{%- else %}
+
+from locust import HttpUser, between, task
+{%- endif %}
 {% if "adk" in cookiecutter.tags %}
 ENDPOINT = "/run_sse"
 {% else %}
