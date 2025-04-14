@@ -13,16 +13,15 @@
 # limitations under the License.
 
 # mypy: disable-error-code="attr-defined"
-{% if "adk" in cookiecutter.tags %}
+{%- if "adk" in cookiecutter.tags %}
 import datetime
 import json
 import logging
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import google.auth
 import vertexai
-from typing import Any
-from collections.abc import Mapping, Sequence
-
 from google.cloud import logging as google_cloud_logging
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider, export
@@ -31,17 +30,13 @@ from vertexai.preview.reasoning_engines import AdkApp
 
 from app.agent import root_agent
 from app.utils.gcs import create_bucket_if_not_exists
-from app.utils.typing import Feedback
 from app.utils.tracing import CloudTraceLoggingSpanExporter
+from app.utils.typing import Feedback
 
 
 class AgentEngineApp(AdkApp):
-
-    def __init__(self, agent, **kwargs):
-        """Initialize the AgentEngineApp with the given agent and additional configuration."""
-        super().__init__(agent=agent, **kwargs)
-    
-    def set_up(self):
+    def set_up(self) -> None:
+        """Set up logging and tracing for the agent engine app."""
         super().set_up()
         logging_client = google_cloud_logging.Client()
         self.logger = logging_client.logger(__name__)
@@ -55,16 +50,15 @@ class AgentEngineApp(AdkApp):
         feedback_obj = Feedback.model_validate(feedback)
         self.logger.log_struct(feedback_obj.model_dump(), severity="INFO")
 
-
     def register_operations(self) -> Mapping[str, Sequence]:
         """Registers the operations of the Agent.
-        
+
         Extends the base operations to include feedback registration functionality.
         """
         operations = super().register_operations()
         operations[""] = operations[""] + ["register_feedback"]
         return operations
-{% else %}
+{%- else %}
 import datetime
 import json
 import logging
@@ -190,7 +184,7 @@ class AgentEngineApp:
             "": ["query", "register_feedback"],
             "stream": ["stream_query"],
         }
-{% endif %}
+{%- endif %}
 
 
 def deploy_agent_engine_app(
@@ -215,9 +209,7 @@ def deploy_agent_engine_app(
         requirements = f.read().strip().split("\n")
 {% if "adk" in cookiecutter.tags %}
     agent_engine = AgentEngineApp(
-        agent=root_agent,
-        env_vars=env_vars,
-        enable_tracing=True
+        agent=root_agent, env_vars=env_vars, enable_tracing=True
     )
 {% else %}
     agent_engine = AgentEngineApp(project_id=project, env_vars=env_vars)

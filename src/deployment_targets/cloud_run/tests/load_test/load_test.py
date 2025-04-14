@@ -17,16 +17,15 @@ import os
 import time
 {%- if "adk" in cookiecutter.tags %}
 import uuid
+
 import requests
-{%- endif %}
-
+{% endif -%}
 from locust import HttpUser, between, task
-
 {% if "adk" in cookiecutter.tags %}
 ENDPOINT = "/run_sse"
 {% else %}
 ENDPOINT = "/stream_messages"
-{%- endif %}
+{% endif %}
 
 class ChatStreamUser(HttpUser):
     """Simulates a user interacting with the chat stream API."""
@@ -43,29 +42,24 @@ class ChatStreamUser(HttpUser):
         # Create session first
         user_id = f"user_{uuid.uuid4()}"
         session_id = f"session_{uuid.uuid4()}"
-        session_data = {
-            "state": {
-                "preferred_language": "English",
-                "visit_count": 5
-            }
-        }
+        session_data = {"state": {"preferred_language": "English", "visit_count": 5}}
         requests.post(
             f"{self.client.base_url}/apps/app/users/{user_id}/sessions/{session_id}",
             headers=headers,
             json=session_data,
-            timeout=10
+            timeout=10,
         )
 
         # Send chat message
         data = {
-            "app_name": "app", 
+            "app_name": "app",
             "user_id": user_id,
             "session_id": session_id,
             "new_message": {
                 "role": "user",
-                "parts": [{"text": "What's the weather in San Francisco?"}]
+                "parts": [{"text": "What's the weather in San Francisco?"}],
             },
-            "streaming": True
+            "streaming": True,
         }
 {%- else %}
         data = {
@@ -98,8 +92,8 @@ class ChatStreamUser(HttpUser):
                     if line:
 {%- if "adk" in cookiecutter.tags %}
                         # SSE format is "data: {json}"
-                        line_str = line.decode('utf-8')
-                        if line_str.startswith('data: '):
+                        line_str = line.decode("utf-8")
+                        if line_str.startswith("data: "):
                             event_json = line_str[6:]  # Remove "data: " prefix
                             event = json.loads(event_json)
                             events.append(event)

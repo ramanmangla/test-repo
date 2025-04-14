@@ -58,7 +58,7 @@ class ChatStreamUser(HttpUser):
         data = {
             "input": {
                 "message": "What's the weather in San Francisco?",
-                "user_id": "test"
+                "user_id": "test",
             }
         }
 {% else %}

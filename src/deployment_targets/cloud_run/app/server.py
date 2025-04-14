@@ -20,9 +20,8 @@ from google.cloud import logging as google_cloud_logging
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider, export
 
-from app.utils.typing import Feedback
 from app.utils.tracing import CloudTraceLoggingSpanExporter
-
+from app.utils.typing import Feedback
 
 logging_client = google_cloud_logging.Client()
 logger = logging_client.logger(__name__)
@@ -66,7 +65,7 @@ try:
         app_name=app.title,
         disable_batch=False,
         exporter=CloudTraceLoggingSpanExporter(),
-        instruments={% raw %}{{% endraw %}{%- for instrumentation in cookiecutter.otel_instrumentations %}{{ instrumentation }}{% if not loop.last %}, {% endif %}{%- endfor %}{% raw %}}{% endraw %},
+        instruments={Instruments.LANGCHAIN, Instruments.CREW},,
     )
 except Exception as e:
     logging.error("Failed to initialize Telemetry: %s", str(e))
@@ -131,8 +130,8 @@ def stream_chat_events(request: Request) -> StreamingResponse:
         stream_messages(input=request.input, config=request.config),
         media_type="text/event-stream",
     )
+{%- endif %}
 
-{% endif %}
 @app.post("/feedback")
 def collect_feedback(feedback: Feedback) -> dict[str, str]:
     """Collect and log feedback.

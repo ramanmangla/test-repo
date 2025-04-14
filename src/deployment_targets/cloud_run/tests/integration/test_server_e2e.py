@@ -124,12 +124,7 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
     # Create session first
     user_id = "user_123"
     session_id = "session_abc"
-    session_data = {
-        "state": {
-            "preferred_language": "English",
-            "visit_count": 5
-        }
-    }
+    session_data = {"state": {"preferred_language": "English", "visit_count": 5}}
     session_response = requests.post(
         f"{BASE_URL}/apps/app/users/{user_id}/sessions/{session_id}",
         headers=HEADERS,
@@ -145,9 +140,9 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
         "session_id": session_id,
         "new_message": {
             "role": "user",
-            "parts": [{"text": "What's the weather in San Francisco?"}]
+            "parts": [{"text": "What's the weather in San Francisco?"}],
         },
-        "streaming": True
+        "streaming": True,
     }
 {% else %}
     data = {
@@ -172,8 +167,8 @@ def test_chat_stream(server_fixture: subprocess.Popen[str]) -> None:
     for line in response.iter_lines():
         if line:
             # SSE format is "data: {json}"
-            line_str = line.decode('utf-8')
-            if line_str.startswith('data: '):
+            line_str = line.decode("utf-8")
+            if line_str.startswith("data: "):
                 event_json = line_str[6:]  # Remove "data: " prefix
                 event = json.loads(event_json)
                 events.append(event)

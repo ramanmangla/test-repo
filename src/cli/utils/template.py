@@ -29,10 +29,9 @@ from src.cli.utils.version import get_current_version
 
 from .datastores import DATASTORES
 
-ADK_FILES = [
-    "app/__init__.py"
-]
-NON_ADK_FILES = []
+ADK_FILES = ["app/__init__.py"]
+NON_ADK_FILES: list[str] = []
+
 
 @dataclass
 class TemplateConfig:
