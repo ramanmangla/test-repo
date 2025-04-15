@@ -65,7 +65,7 @@ class AgentEngineApp(AdkApp):
         operations[""] = operations[""] + ["register_feedback"]
         return operations
 
-    def clone(self):
+    def clone(self) -> "AgentEngineApp":
         """Returns a clone of the ADK application."""
         template_attributes = self._tmpl_attrs
         return self.__class__(
