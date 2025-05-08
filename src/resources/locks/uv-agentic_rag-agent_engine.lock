@@ -796,7 +796,7 @@ wheels = [
 
 [[package]]
 name = "google-cloud-aiplatform"
-version = "1.90.0"
+version = "1.91.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -812,9 +812,9 @@ dependencies = [
     { name = "shapely" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b7/37/7797196b52ac8233cbd6294c956c97ebf74a1ee79980770751e7576c50f7/google_cloud_aiplatform-1.90.0.tar.gz", hash = "sha256:1478fb6119c678f1d2ba91421a041bf77c6cf13f7474ff6bac724df937f1baf0", size = 9098942 }
+sdist = { url = "https://files.pythonhosted.org/packages/50/08/5854569782efbbc8efd0aeda3a4486153605104cbab6ac836b2328bae48e/google_cloud_aiplatform-1.91.0.tar.gz", hash = "sha256:b14e5e52b52b6012c7dc253beab34c511fdc53c69b13f436ddb06882c1a92cd7", size = 9102586 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/a6/330a1a5a09ae89d3decfffd4ce811f46d4ae1e79c7b79f6ff25ea7027d9b/google_cloud_aiplatform-1.90.0-py2.py3-none-any.whl", hash = "sha256:fd8f50902fd2838a14ef2762da5750a27f9d5605824a3bce1139bcde34a23349", size = 7591051 },
+    { url = "https://files.pythonhosted.org/packages/d1/88/cea8583fadd142e8ef26f8ec14a6ee4d7c69c4e5ab82bea01a077fddddbe/google_cloud_aiplatform-1.91.0-py2.py3-none-any.whl", hash = "sha256:ff8df100c2af692d114a2219d3abbb96110b3e5655f342fdbb6aefad43901b52", size = 7591910 },
 ]
 
 [package.optional-dependencies]
@@ -1833,7 +1833,7 @@ vertexaisearch = [
 
 [[package]]
 name = "langchain-google-vertexai"
-version = "2.0.21"
+version = "2.0.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bottleneck" },
@@ -1847,9 +1847,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "validators" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/18/a4f3c82a542bbbbed4b19141415d7a636f64b370a2ab8c17b93b890a5ff4/langchain_google_vertexai-2.0.21.tar.gz", hash = "sha256:c602e310890739ac8cfa0b16ff60c6b91ea660a3534f335c0875cc3bbec55f19", size = 83573 }
+sdist = { url = "https://files.pythonhosted.org/packages/54/ed/48e3083cb17e81796b4c768d46a082f812331da7a28c1c3228d51e3099d5/langchain_google_vertexai-2.0.22.tar.gz", hash = "sha256:66b9f57f2d3449609f01df88d2765295b2f2f47742b879e1692bdcb6a29950b1", size = 83986 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/13/f634b2808c95000fb9ba2904aebf4f797776376e0454e539b30a055d7787/langchain_google_vertexai-2.0.21-py3-none-any.whl", hash = "sha256:a09ebbe951f467d1095142da033750f71bfd5cd5495f8584e576c456ad7cb831", size = 99424 },
+    { url = "https://files.pythonhosted.org/packages/ac/44/ec8fccce61748ecc2eee3e037ffe586ef45bc27fff18bfbcd3dc8f7a6cec/langchain_google_vertexai-2.0.22-py3-none-any.whl", hash = "sha256:b8eb1254d185ecaa772ab513ac87972a7183bd79ab636b436779973e429089e4", size = 99825 },
 ]
 
 [[package]]
@@ -1937,7 +1937,7 @@ dev = [
 requires-dist = [
     { name = "codespell", marker = "extra == 'lint'", specifier = "~=2.2.0" },
     { name = "google-adk", specifier = "~=0.2.0" },
-    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = "~=1.90.0" },
+    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = "==1.91.0" },
     { name = "google-cloud-logging", specifier = "~=3.11.4" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "jupyter", marker = "extra == 'jupyter'", specifier = "~=1.0.0" },
