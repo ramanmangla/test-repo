@@ -2027,7 +2027,7 @@ dev = [
 requires-dist = [
     { name = "codespell", marker = "extra == 'lint'", specifier = "~=2.2.0" },
     { name = "extra-streamlit-components", marker = "extra == 'streamlit'", specifier = "~=0.1.71" },
-    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = "==1.91.0" },
+    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = "~=1.91.0" },
     { name = "google-cloud-logging", specifier = "~=3.11.4" },
     { name = "jupyter", marker = "extra == 'jupyter'", specifier = "~=1.0.0" },
     { name = "langchain", specifier = "~=0.3.14" },

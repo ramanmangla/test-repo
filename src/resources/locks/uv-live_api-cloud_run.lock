@@ -2185,7 +2185,7 @@ requires-dist = [
     { name = "codespell", marker = "extra == 'lint'", specifier = "~=2.2.0" },
     { name = "extra-streamlit-components", marker = "extra == 'streamlit'", specifier = "~=0.1.71" },
     { name = "fastapi", specifier = "~=0.115.8" },
-    { name = "google-cloud-aiplatform", extras = ["evaluation"], specifier = "==1.91.0" },
+    { name = "google-cloud-aiplatform", extras = ["evaluation"], specifier = "~=1.91.0" },
     { name = "google-cloud-logging", specifier = "~=3.11.4" },
     { name = "google-genai", specifier = "~=1.8.0" },
     { name = "jinja2", specifier = "~=3.1.4" },
