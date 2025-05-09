@@ -498,11 +498,7 @@ def setup_cicd(
         if not click.confirm("\nDo you want to continue with the setup?", default=True):
             console.print("\n🛑 Setup cancelled by user", style="bold yellow")
             return
-            
-    # Check if GitHub CLI is installed
-    if git_provider == "github" or git_provider is None:
-        if not check_gh_cli_installed():
-            prompt_gh_cli_installation()
+
     console.print(
         "This command helps set up a basic CI/CD pipeline for development and testing purposes."
     )
@@ -535,6 +531,9 @@ def setup_cicd(
 
     # Check GitHub authentication if GitHub is selected
     if git_provider == "github" and not (github_pat and github_app_installation_id):
+        # Check if GitHub CLI is installed
+        if not check_gh_cli_installed():
+            prompt_gh_cli_installation()
         if not is_github_authenticated():
             console.print("\n⚠️ Not authenticated with GitHub CLI", style="yellow")
             handle_github_authentication()
