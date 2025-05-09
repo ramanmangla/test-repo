@@ -76,7 +76,7 @@ def display_production_note() -> None:
 
 def check_gh_cli_installed() -> bool:
     """Check if GitHub CLI is installed.
-    
+
     Returns:
         bool: True if GitHub CLI is installed, False otherwise
     """

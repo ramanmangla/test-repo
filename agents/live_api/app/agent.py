@@ -19,7 +19,6 @@ import vertexai
 from google import genai
 from google.genai import types
 
-
 # Constants
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
@@ -38,7 +37,7 @@ else:
     genai_client = genai.Client(http_options={"api_version": "v1alpha"})
 
 
-def get_weather(query: str) -> str:
+def get_weather(query: str) -> dict:
     """Simulates a web search. Use it get information on weather.
 
     Args:
@@ -59,9 +58,7 @@ live_connect_config = types.LiveConnectConfig(
     response_modalities=["AUDIO"],
     tools=[get_weather],
     # Change to desired language code (e.g., "es-ES" for Spanish, "fr-FR" for French)
-    speech_config=types.SpeechConfig(
-        language_code="en-US"
-    ),
+    speech_config=types.SpeechConfig(language_code="en-US"),
     system_instruction=types.Content(
         parts=[
             {
