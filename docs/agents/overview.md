@@ -9,7 +9,7 @@ The Agent Starter Pack follows a "bring your own agent" approach. It provides se
 |------------|-------------|----------|
 | `adk_base` | A base ReAct agent implemented using Google's [Agent Development Kit](https://github.com/google/adk-python) | General purpose conversational agent |
 | `agentic_rag` | A RAG agent for document retrieval and Q&A | Document search and question answering |
-| `langgraph_base_react` | A base ReAct agent using LangGraph | General purpose agent with reasoning capabilities |
+| `langgraph_base_react` | A base ReAct agent using LangGraph | Graph based conversational agent |
 | `crewai_coding_crew` | A multi-agent system implemented with CrewAI | Collaborative coding assistance |
 | `live_api` | A real-time multimodal RAG agent | Audio/video/text chat with knowledge base |
 
@@ -67,7 +67,7 @@ This template combines [CrewAI](https://www.crewai.com/)'s multi-agent collabora
 Powered by Google Gemini, this template showcases a real-time, multimodal conversational RAG agent using the [Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api). Features include:
 
 *   Handles audio, video, and text interactions.
-*   Leverages tool calling with a vector database for grounded RAG responses.
+*   Leverages tool calling.
 *   Real-time bidirectional communication via WebSockets for low-latency chat.
 *   Production-ready Python backend (FastAPI) and React frontend.
 *   Includes feedback collection capabilities.
