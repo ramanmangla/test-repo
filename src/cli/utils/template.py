@@ -513,7 +513,9 @@ def process_template(
                 "agent_name": agent_name,
                 "package_version": get_current_version(),
                 "agent_description": template_config.get("description", ""),
-                "example_question": template_config.get("example_question", "").ljust(61),
+                "example_question": template_config.get("example_question", "").ljust(
+                    61
+                ),
                 "tags": tags,
                 "deployment_target": deployment_target or "",
                 "frontend_type": frontend_type,
