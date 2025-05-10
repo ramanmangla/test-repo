@@ -520,7 +520,7 @@ def process_template(
                 "deployment_target": deployment_target or "",
                 "frontend_type": frontend_type,
                 "extra_dependencies": [extra_deps],
-                "data_ingestion": include_data_ingestion,  # Use explicit flag for cookiecutter
+                "data_ingestion": include_data_ingestion,
                 "datastore_type": datastore if datastore else "",
                 "_copy_without_render": [
                     "*.ipynb",  # Don't render notebooks
