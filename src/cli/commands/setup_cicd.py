@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
 import re
 import shutil
@@ -553,9 +552,7 @@ def setup_cicd(
 
         # Then create the connection
         oauth_token_secret_id, github_app_installation_id = create_github_connection(
-            project_id=cicd_project,
-            region=region,
-            connection_name=host_connection_name
+            project_id=cicd_project, region=region, connection_name=host_connection_name
         )
         repository_exists = True
     elif git_provider == "github" and detected_mode == "programmatic":

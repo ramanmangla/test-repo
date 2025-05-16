@@ -89,9 +89,7 @@ def setup_repository_name(
 
 
 def create_github_connection(
-    project_id: str,
-    region: str,
-    connection_name: str
+    project_id: str, region: str, connection_name: str
 ) -> tuple[str, str]:
     """Create and verify GitHub connection using gcloud command.
 
