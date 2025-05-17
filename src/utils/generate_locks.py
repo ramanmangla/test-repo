@@ -144,8 +144,8 @@ def main(template: pathlib.Path) -> None:
                 config=config,
             )
 
-            # Generate only one lock file with the community prefix format
-            community_name = f"community_{agent_name}"
+            # Generate lock file with the community/ prefix format (using underscore)
+            community_name = f"community/{agent_name}".replace('/', '_')
             community_output_path = lock_dir / f"uv-{community_name}-{target}.lock"
             generate_lock_file(content, community_output_path)
             print(f"Generated {community_output_path} (with community prefix)")
