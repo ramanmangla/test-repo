@@ -168,20 +168,32 @@ def create(
         # Agent selection
         selected_agent = None
         if agent:
-            agents = get_available_agents()
-            # First check if it's a valid agent name
-            if any(p["name"] == agent for p in agents.values()):
+            # Check if it's a community agent
+            if agent.startswith("community/"):
                 selected_agent = agent
-            else:
-                # Try numeric agent selection if input is a number
+                # Validate that the community agent exists
                 try:
-                    agent_num = int(agent)
-                    if agent_num in agents:
-                        selected_agent = agents[agent_num]["name"]
-                    else:
-                        raise ValueError(f"Invalid agent number: {agent_num}")
-                except ValueError as err:
-                    raise ValueError(f"Invalid agent name or number: {agent}") from err
+                    template_path = get_template_path(agent, debug=debug)
+                    if debug:
+                        logging.debug(f"Found community agent template at: {template_path}")
+                except ValueError as e:
+                    raise ValueError(f"Invalid community agent: {agent}. {str(e)}")
+            else:
+                # Handle regular agent selection
+                agents = get_available_agents()
+                # First check if it's a valid agent name
+                if any(p["name"] == agent for p in agents.values()):
+                    selected_agent = agent
+                else:
+                    # Try numeric agent selection if input is a number
+                    try:
+                        agent_num = int(agent)
+                        if agent_num in agents:
+                            selected_agent = agents[agent_num]["name"]
+                        else:
+                            raise ValueError(f"Invalid agent number: {agent_num}")
+                    except ValueError as err:
+                        raise ValueError(f"Invalid agent name or number: {agent}") from err
 
         final_agent = (
             selected_agent

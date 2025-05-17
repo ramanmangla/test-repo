@@ -312,8 +312,32 @@ def prompt_datastore_selection(
     return datastore_type
 
 
+def get_community_template_path(agent_name: str, debug: bool = False) -> pathlib.Path:
+    """Get the absolute path to the community agent template directory."""
+    if not agent_name.startswith("community/"):
+        raise ValueError(f"Not a community agent: {agent_name}")
+        
+    _, community_agent_name = agent_name.split("/", 1)
+    current_dir = pathlib.Path(__file__).parent.parent.parent.parent
+    template_path = current_dir / "community" / "agents" / community_agent_name / "template"
+    
+    if debug:
+        logging.debug(f"Looking for community template in: {template_path}")
+        logging.debug(f"Template exists: {template_path.exists()}")
+        if template_path.exists():
+            logging.debug(f"Template contents: {list(template_path.iterdir())}")
+
+    if not template_path.exists():
+        raise ValueError(f"Community template directory not found at {template_path}")
+
+    return template_path
+
 def get_template_path(agent_name: str, debug: bool = False) -> pathlib.Path:
     """Get the absolute path to the agent template directory."""
+    # Handle community agents
+    if agent_name.startswith("community/"):
+        return get_community_template_path(agent_name, debug)
+        
     current_dir = pathlib.Path(__file__).parent.parent.parent.parent
     template_path = current_dir / "agents" / agent_name / "template"
     if debug:
@@ -354,6 +378,27 @@ def copy_data_ingestion_files(
         )
 
 
+def get_base_agent_name(community_agent_name: str) -> str:
+    """Get the name of the base agent that a community agent extends.
+    
+    Args:
+        community_agent_name: Full name of the community agent (including 'community/' prefix)
+        
+    Returns:
+        Name of the base agent
+    """
+    if not community_agent_name.startswith("community/"):
+        raise ValueError(f"Not a community agent: {community_agent_name}")
+        
+    template_path = get_community_template_path(community_agent_name)
+    config = load_template_config(template_path)
+    
+    base_agent = config.get("settings", {}).get("extends")
+    if not base_agent:
+        raise ValueError(f"Community agent {community_agent_name} must extend a base agent")
+        
+    return base_agent
+
 def process_template(
     agent_name: str,
     template_dir: pathlib.Path,
@@ -378,8 +423,21 @@ def process_template(
     logging.debug(f"Include pipeline: {datastore}")
     logging.debug(f"Output directory: {output_dir}")
 
+    # Check if this is a community agent
+    is_community_agent = agent_name.startswith("community/")
+    base_agent_name = None
+    
+    if is_community_agent:
+        # Get the base agent name
+        base_agent_name = get_base_agent_name(agent_name)
+        logging.debug(f"Community agent extends: {base_agent_name}")
+    
     # Get paths
-    agent_path = template_dir.parent  # Get parent of template dir
+    if is_community_agent:
+        _, community_agent_name = agent_name.split("/", 1)
+        agent_path = template_dir.parent  # Get parent of template dir
+    else:
+        agent_path = template_dir.parent  # Get parent of template dir
     logging.debug(f"agent path: {agent_path}")
     logging.debug(f"agent path exists: {agent_path.exists()}")
     logging.debug(
@@ -452,7 +510,34 @@ def process_template(
             copy_frontend_files(frontend_type, project_template)
             logging.debug(f"4. Processed frontend files for type: {frontend_type}")
 
-            # 5. Finally, copy agent-specific files to override everything else
+            # 5. If this is a community agent, first copy the base agent files
+            if is_community_agent and base_agent_name:
+                base_agent_template_path = pathlib.Path(__file__).parent.parent.parent.parent / "agents" / base_agent_name / "template"
+                base_agent_path = base_agent_template_path.parent
+                
+                # First load the base agent's template config
+                base_config = load_template_config(base_agent_template_path)
+                
+                # Copy base agent files
+                for folder in OVERWRITE_FOLDERS:
+                    base_agent_folder = base_agent_path / folder
+                    project_folder = project_template / folder
+                    if base_agent_folder.exists():
+                        logging.debug(f"5. Copying base agent folder {folder}")
+                        copy_files(
+                            base_agent_folder, project_folder, agent_name=base_agent_name, overwrite=True
+                        )
+                
+                # Copy base agent README.md if it exists
+                base_agent_readme = base_agent_path / "README.md"
+                if base_agent_readme.exists():
+                    base_agent_readme_dest = project_template / "base_agent_README.md"
+                    shutil.copy2(base_agent_readme, base_agent_readme_dest)
+                    logging.debug(
+                        f"Copied base agent README from {base_agent_readme} to {base_agent_readme_dest}"
+                    )
+
+            # 6. Finally, copy agent-specific files to override everything else
             if agent_path.exists():
                 for folder in OVERWRITE_FOLDERS:
                     agent_folder = agent_path / folder
@@ -510,7 +595,7 @@ def process_template(
             tags = template_config.get("settings", {}).get("tags", ["None"])
             cookiecutter_config = {
                 "project_name": "my-project",
-                "agent_name": agent_name,
+                "agent_name": community_agent_name if is_community_agent else agent_name,
                 "package_version": get_current_version(),
                 "agent_description": template_config.get("description", ""),
                 "example_question": template_config.get("example_question", "").ljust(
@@ -556,7 +641,7 @@ def process_template(
                 no_input=True,
                 extra_context={
                     "project_name": project_name,
-                    "agent_name": agent_name,
+                    "agent_name": community_agent_name if is_community_agent else agent_name,
                 },
             )
             logging.debug("Template processing completed successfully")
@@ -586,13 +671,16 @@ def process_template(
 
                 # After copying template files, handle the lock file
                 if deployment_target:
+                    # For community agents, use the base agent's lock file
+                    agent_for_lock = base_agent_name if is_community_agent else agent_name
+                    
                     # Get the source lock file path
                     lock_path = (
                         pathlib.Path(__file__).parent.parent.parent.parent
                         / "src"
                         / "resources"
                         / "locks"
-                        / f"uv-{agent_name}-{deployment_target}.lock"
+                        / f"uv-{agent_for_lock}-{deployment_target}.lock"
                     )
                     logging.debug(f"Looking for lock file at: {lock_path}")
                     logging.debug(f"Lock file exists: {lock_path.exists()}")
