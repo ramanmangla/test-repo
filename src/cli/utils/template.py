@@ -714,7 +714,7 @@ def process_template(
                             available_locks = list(locks_dir.glob('*.lock'))
                             logging.error(f"Available lock files: {available_locks}")
                             raise FileNotFoundError(
-                                f"Lock file not found for community agent {agent_name} or base agent {base_agent_name}"
+                                f"Lock file not found for community agent {agent_name} or base agent {base_agent_name} with deployment target {deployment_target}"
                             )
                     else:
                         # For regular agents, use the agent's lock file
@@ -730,7 +730,7 @@ def process_template(
                     logging.debug(f"Lock file exists: {lock_path.exists()}")
                     
                     if not lock_path.exists():
-                        raise FileNotFoundError(f"Lock file not found: {lock_path}")
+                        raise FileNotFoundError(f"Lock file not found: {lock_path} for agent {agent_name} with deployment target {deployment_target}")
                         
                     # Copy and rename to uv.lock in the project directory
                     try:
