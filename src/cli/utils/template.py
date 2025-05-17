@@ -18,7 +18,7 @@ import pathlib
 import shutil
 import tempfile
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 from cookiecutter.main import cookiecutter
@@ -310,6 +310,107 @@ def prompt_datastore_selection(
     # Convert choice number to datastore type
     datastore_type = list(DATASTORES.keys())[int(choice) - 1]
     return datastore_type
+
+
+def handle_lock_file(
+    agent_name: str,
+    deployment_target: str,
+    is_community_agent: bool,
+    base_agent_name: Optional[str],
+    final_destination: pathlib.Path,
+    project_name: str,
+) -> None:
+    """Handle the lock file for the template.
+    
+    Args:
+        agent_name: Name of the agent
+        deployment_target: Deployment target (agent_engine or cloud_run)
+        is_community_agent: Whether this is a community agent
+        base_agent_name: Name of the base agent (for community agents)
+        final_destination: Path to the final project directory
+        project_name: Name of the project
+        
+    Raises:
+        FileNotFoundError: If the lock file is not found
+        RuntimeError: If there's an error processing the lock file
+    """
+    # Determine which lock file to use
+    if is_community_agent:
+        # For community agents, first try to use the community agent's lock file
+        # If it doesn't exist, fall back to the base agent's lock file
+        _, community_agent_short_name = agent_name.split("/", 1)
+        
+        # Debug the lock file path construction
+        logging.debug(f"Community agent short name: {community_agent_short_name}")
+        
+        # Format the community agent name with underscore (same as in generate_locks.py)
+        community_name = f"community/{community_agent_short_name}".replace('/', '_')
+        community_lock_path = (
+            pathlib.Path(__file__).parent.parent.parent.parent
+            / "src"
+            / "resources"
+            / "locks"
+            / f"uv-{community_name}-{deployment_target}.lock"
+        )
+        
+        base_lock_path = (
+            pathlib.Path(__file__).parent.parent.parent.parent
+            / "src"
+            / "resources"
+            / "locks"
+            / f"uv-{base_agent_name}-{deployment_target}.lock"
+        )
+        
+        logging.debug(f"Checking community lock path: {community_lock_path} (exists: {community_lock_path.exists()})")
+        logging.debug(f"Checking base lock path: {base_lock_path} (exists: {base_lock_path.exists()})")
+        
+        if community_lock_path.exists():
+            lock_path = community_lock_path
+            logging.debug(f"Using community agent lock file: {lock_path}")
+        else:
+            raise FileNotFoundError(
+                f"Community lock file ({community_lock_path}) "
+                f"not found for community agent {agent_name} with deployment target {deployment_target}"
+            )
+    else:
+        # For regular agents, use the agent's lock file
+        lock_path = (
+            pathlib.Path(__file__).parent.parent.parent.parent
+            / "src"
+            / "resources"
+            / "locks"
+            / f"uv-{agent_name}-{deployment_target}.lock"
+        )
+        
+    logging.debug(f"Using lock file: {lock_path}")
+    logging.debug(f"Lock file exists: {lock_path.exists()}")
+    
+    if not lock_path.exists():
+        locks_dir = pathlib.Path(__file__).parent.parent.parent.parent / "src" / "resources" / "locks"
+        available_locks = list(locks_dir.glob('*.lock'))
+        logging.error(f"Available lock files: {available_locks}")
+        raise FileNotFoundError(f"Lock file not found: {lock_path} for agent {agent_name} with deployment target {deployment_target}")
+        
+    # Copy and rename to uv.lock in the project directory
+    try:
+        shutil.copy2(lock_path, final_destination / "uv.lock")
+        logging.debug(f"Copied lock file from {lock_path} to {final_destination / 'uv.lock'}")
+        
+        # Verify the lock file was copied successfully
+        if not (final_destination / "uv.lock").exists():
+            raise FileNotFoundError(f"Lock file not found at {final_destination / 'uv.lock'} after copying")
+            
+        # Replace cookiecutter project name with actual project name in lock file
+        lock_file_path = final_destination / "uv.lock"
+        with open(lock_file_path, "r+", encoding="utf-8") as f:
+            content = f.read()
+            f.seek(0)
+            f.write(content.replace("{{cookiecutter.project_name}}", project_name))
+            f.truncate()
+        logging.debug(f"Updated project name in lock file at {lock_file_path}")
+    except Exception as e:
+        logging.error(f"Error handling lock file: {e}")
+        raise RuntimeError(f"Failed to process lock file: {e}")
 
 
 def get_community_template_path(agent_name: str, debug: bool = False) -> pathlib.Path:
@@ -671,82 +772,14 @@ def process_template(
 
                 # After copying template files, handle the lock file
                 if deployment_target:
-                    # Determine which lock file to use
-                    if is_community_agent:
-                        # For community agents, first try to use the community agent's lock file
-                        # If it doesn't exist, fall back to the base agent's lock file
-                        _, community_agent_short_name = agent_name.split("/", 1)
-                        
-                        # Debug the lock file path construction
-                        logging.debug(f"Community agent short name: {community_agent_short_name}")
-                        
-                        # Format the community agent name with underscore (same as in generate_locks.py)
-                        community_name = f"community/{community_agent_short_name}".replace('/', '_')
-                        community_lock_path = (
-                            pathlib.Path(__file__).parent.parent.parent.parent
-                            / "src"
-                            / "resources"
-                            / "locks"
-                            / f"uv-{community_name}-{deployment_target}.lock"
-                        )
-                        
-                        base_lock_path = (
-                            pathlib.Path(__file__).parent.parent.parent.parent
-                            / "src"
-                            / "resources"
-                            / "locks"
-                            / f"uv-{base_agent_name}-{deployment_target}.lock"
-                        )
-                        
-                        logging.debug(f"Checking community lock path: {community_lock_path} (exists: {community_lock_path.exists()})")
-                        logging.debug(f"Checking base lock path: {base_lock_path} (exists: {base_lock_path.exists()})")
-                        if community_lock_path.exists():
-                            lock_path = community_lock_path
-                            logging.debug(f"Using community agent lock file: {lock_path}")
-                        else:
-                            raise FileNotFoundError(
-                                f"Community lock file ({community_lock_path}) "
-                                f"not found for community agent {agent_name} with deployment target {deployment_target}"
-                            )
-                    else:
-                        # For regular agents, use the agent's lock file
-                        lock_path = (
-                            pathlib.Path(__file__).parent.parent.parent.parent
-                            / "src"
-                            / "resources"
-                            / "locks"
-                            / f"uv-{agent_name}-{deployment_target}.lock"
-                        )
-                        
-                    logging.debug(f"Using lock file: {lock_path}")
-                    logging.debug(f"Lock file exists: {lock_path.exists()}")
-                    
-                    if not lock_path.exists():
-                        locks_dir = pathlib.Path(__file__).parent.parent.parent.parent / "src" / "resources" / "locks"
-                        available_locks = list(locks_dir.glob('*.lock'))
-                        logging.error(f"Available lock files: {available_locks}")
-                        raise FileNotFoundError(f"Lock file not found: {lock_path} for agent {agent_name} with deployment target {deployment_target}")
-                        
-                    # Copy and rename to uv.lock in the project directory
-                    try:
-                        shutil.copy2(lock_path, final_destination / "uv.lock")
-                        logging.debug(f"Copied lock file from {lock_path} to {final_destination / 'uv.lock'}")
-                        
-                        # Verify the lock file was copied successfully
-                        if not (final_destination / "uv.lock").exists():
-                            raise FileNotFoundError(f"Lock file not found at {final_destination / 'uv.lock'} after copying")
-                            
-                        # Replace cookiecutter project name with actual project name in lock file
-                        lock_file_path = final_destination / "uv.lock"
-                        with open(lock_file_path, "r+", encoding="utf-8") as f:
-                            content = f.read()
-                            f.seek(0)
-                            f.write(content.replace("{{cookiecutter.project_name}}", project_name))
-                            f.truncate()
-                        logging.debug(f"Updated project name in lock file at {lock_file_path}")
-                    except Exception as e:
-                        logging.error(f"Error handling lock file: {e}")
-                        raise RuntimeError(f"Failed to process lock file: {e}")
+                    handle_lock_file(
+                        agent_name=agent_name,
+                        deployment_target=deployment_target,
+                        is_community_agent=is_community_agent,
+                        base_agent_name=base_agent_name,
+                        final_destination=final_destination,
+                        project_name=project_name,
+                    )
             else:
                 logging.error(f"Generated project directory not found at {output_dir}")
                 raise FileNotFoundError(
