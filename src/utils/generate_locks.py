@@ -154,6 +154,12 @@ def main(template: pathlib.Path) -> None:
             community_output_path = lock_dir / f"uv-{community_name}-{target}.lock"
             generate_lock_file(content, community_output_path)
             print(f"Generated {community_output_path} (with community prefix)")
+            
+            # Generate with the full community agent name (including 'community/' prefix)
+            full_community_name = f"community/{agent_name}".replace('/', '_')
+            full_community_output_path = lock_dir / f"uv-{full_community_name}-{target}.lock"
+            generate_lock_file(content, full_community_output_path)
+            print(f"Generated {full_community_output_path} (with full community path)")
 
 
 if __name__ == "__main__":
