@@ -680,31 +680,14 @@ def process_template(
                         # Debug the lock file path construction
                         logging.debug(f"Community agent short name: {community_agent_short_name}")
                         
-                        # Try multiple possible lock file naming patterns
+                        # Format the community agent name with underscore (same as in generate_locks.py)
+                        community_name = f"community/{community_agent_short_name}".replace('/', '_')
                         community_lock_path = (
                             pathlib.Path(__file__).parent.parent.parent.parent
                             / "src"
                             / "resources"
                             / "locks"
-                            / f"uv-{community_agent_short_name}-{deployment_target}.lock"
-                        )
-                        
-                        # Check for lock file with community_ prefix
-                        community_prefix_lock_path = (
-                            pathlib.Path(__file__).parent.parent.parent.parent
-                            / "src"
-                            / "resources"
-                            / "locks"
-                            / f"uv-community_{community_agent_short_name}-{deployment_target}.lock"
-                        )
-                        
-                        # Also check for lock file with full community agent name (including 'community/' prefix)
-                        full_community_lock_path = (
-                            pathlib.Path(__file__).parent.parent.parent.parent
-                            / "src"
-                            / "resources"
-                            / "locks"
-                            / f"uv-{agent_name.replace('/', '_')}-{deployment_target}.lock"
+                            / f"uv-{community_name}-{deployment_target}.lock"
                         )
                         
                         base_lock_path = (
@@ -715,20 +698,21 @@ def process_template(
                             / f"uv-{base_agent_name}-{deployment_target}.lock"
                         )
                         
-                        # Try community agent lock files first, then fall back to base agent
+                        logging.debug(f"Checking community lock path: {community_lock_path} (exists: {community_lock_path.exists()})")
+                        logging.debug(f"Checking base lock path: {base_lock_path} (exists: {base_lock_path.exists()})")
+                        
+                        # Try community agent lock file first, then fall back to base agent
                         if community_lock_path.exists():
                             lock_path = community_lock_path
                             logging.debug(f"Using community agent lock file: {lock_path}")
-                        elif community_prefix_lock_path.exists():
-                            lock_path = community_prefix_lock_path
-                            logging.debug(f"Using community prefix lock file: {lock_path}")
-                        elif full_community_lock_path.exists():
-                            lock_path = full_community_lock_path
-                            logging.debug(f"Using full community agent lock file: {lock_path}")
                         elif base_lock_path.exists():
                             lock_path = base_lock_path
                             logging.debug(f"Using base agent lock file as fallback: {lock_path}")
                         else:
+                            # List all files in the locks directory for debugging
+                            locks_dir = pathlib.Path(__file__).parent.parent.parent.parent / "src" / "resources" / "locks"
+                            available_locks = list(locks_dir.glob('*.lock'))
+                            logging.error(f"Available lock files: {available_locks}")
                             raise FileNotFoundError(
                                 f"Lock file not found for community agent {agent_name} or base agent {base_agent_name}"
                             )
@@ -742,32 +726,36 @@ def process_template(
                             / f"uv-{agent_name}-{deployment_target}.lock"
                         )
                         
-                    logging.debug(f"Looking for lock file at: {lock_path}")
+                    logging.debug(f"Using lock file: {lock_path}")
                     logging.debug(f"Lock file exists: {lock_path.exists()}")
                     
                     if not lock_path.exists():
                         raise FileNotFoundError(f"Lock file not found: {lock_path}")
                         
                     # Copy and rename to uv.lock in the project directory
-                    shutil.copy2(lock_path, final_destination / "uv.lock")
-                    logging.debug(
-                        f"Copied lock file from {lock_path} to {final_destination}/uv.lock"
-                    )
-
-                    # Replace cookiecutter project name with actual project name in lock file
-                    lock_file_path = final_destination / "uv.lock"
-                    with open(lock_file_path, "r+", encoding="utf-8") as f:
-                        content = f.read()
-                        f.seek(0)
-                        f.write(
-                            content.replace(
-                                "{{cookiecutter.project_name}}", project_name
-                            )
-                        )
-                        f.truncate()
-                    logging.debug(
-                        f"Updated project name in lock file at {lock_file_path}"
-                    )
+                    try:
+                        shutil.copy2(lock_path, final_destination / "uv.lock")
+                        logging.debug(f"Copied lock file from {lock_path} to {final_destination / 'uv.lock'}")
+                        
+                        # Verify the lock file was copied successfully
+                        if not (final_destination / "uv.lock").exists():
+                            raise FileNotFoundError(f"Lock file not found at {final_destination / 'uv.lock'} after copying")
+                            
+                        # Replace cookiecutter project name with actual project name in lock file
+                        lock_file_path = final_destination / "uv.lock"
+                        with open(lock_file_path, "r+", encoding="utf-8") as f:
+                            content = f.read()
+                            f.seek(0)
+                            f.write(content.replace("{{cookiecutter.project_name}}", project_name))
+                            f.truncate()
+                        logging.debug(f"Updated project name in lock file at {lock_file_path}")
+                        
+                        # Final verification
+                        if not (final_destination / "uv.lock").exists():
+                            raise FileNotFoundError(f"Lock file missing after template processing: {final_destination / 'uv.lock'}")
+                    except Exception as e:
+                        logging.error(f"Error handling lock file: {e}")
+                        raise RuntimeError(f"Failed to process lock file: {e}")
             else:
                 logging.error(f"Generated project directory not found at {output_dir}")
                 raise FileNotFoundError(
