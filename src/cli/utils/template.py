@@ -680,6 +680,7 @@ def process_template(
                         # Debug the lock file path construction
                         logging.debug(f"Community agent short name: {community_agent_short_name}")
                         
+                        # Try multiple possible lock file naming patterns
                         community_lock_path = (
                             pathlib.Path(__file__).parent.parent.parent.parent
                             / "src"
@@ -688,8 +689,16 @@ def process_template(
                             / f"uv-{community_agent_short_name}-{deployment_target}.lock"
                         )
                         
+                        # Check for lock file with community_ prefix
+                        community_prefix_lock_path = (
+                            pathlib.Path(__file__).parent.parent.parent.parent
+                            / "src"
+                            / "resources"
+                            / "locks"
+                            / f"uv-community_{community_agent_short_name}-{deployment_target}.lock"
+                        )
+                        
                         # Also check for lock file with full community agent name (including 'community/' prefix)
-                        # This is how the lock file is generated in generate_locks.py
                         full_community_lock_path = (
                             pathlib.Path(__file__).parent.parent.parent.parent
                             / "src"
@@ -710,6 +719,9 @@ def process_template(
                         if community_lock_path.exists():
                             lock_path = community_lock_path
                             logging.debug(f"Using community agent lock file: {lock_path}")
+                        elif community_prefix_lock_path.exists():
+                            lock_path = community_prefix_lock_path
+                            logging.debug(f"Using community prefix lock file: {lock_path}")
                         elif full_community_lock_path.exists():
                             lock_path = full_community_lock_path
                             logging.debug(f"Using full community agent lock file: {lock_path}")

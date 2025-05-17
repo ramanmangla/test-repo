@@ -131,13 +131,6 @@ def main(template: pathlib.Path) -> None:
             output_path = lock_dir / get_lock_filename(agent_name, target)
             generate_lock_file(content, output_path)
             print(f"Generated {output_path}")
-            
-            # For community agents, also generate with the full name (community/agent_name)
-            if agent_name.startswith("community/"):
-                full_name = agent_name.replace("/", "_")
-                output_path = lock_dir / f"uv-{full_name}-{target}.lock"
-                generate_lock_file(content, output_path)
-                print(f"Generated {output_path} (with full community agent name)")
     
     # Process community agents
     for agent_name, config in community_agent_configs.items():
@@ -151,10 +144,16 @@ def main(template: pathlib.Path) -> None:
                 config=config,
             )
 
-            # Generate lock file
+            # Generate lock file with the standard name format
             output_path = lock_dir / get_lock_filename(agent_name, target)
             generate_lock_file(content, output_path)
             print(f"Generated {output_path}")
+            
+            # Also generate with the community/ prefix format
+            community_name = f"community_{agent_name}"
+            community_output_path = lock_dir / f"uv-{community_name}-{target}.lock"
+            generate_lock_file(content, community_output_path)
+            print(f"Generated {community_output_path} (with community prefix)")
 
 
 if __name__ == "__main__":
