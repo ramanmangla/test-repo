@@ -201,7 +201,7 @@ def create(
             else display_agent_selection(deployment_target)
         )
         if debug:
-            logging.debug(f"Selected agent: {agent}")
+            logging.debug(f"Selected agent: {final_agent}")
 
         # Data ingestion and datastore selection
         if include_data_ingestion or datastore:
@@ -236,11 +236,57 @@ def create(
                     logging.debug(f"Selected datastore type: {datastore}")
 
         # Deployment target selection
-        final_deployment = (
-            deployment_target
-            if deployment_target
-            else prompt_deployment_target(final_agent)
-        )
+        # For community agents, we need to get the deployment targets from the template config
+        if final_agent.startswith("community/"):
+            template_path = get_template_path(final_agent, debug=debug)
+            config = load_template_config(template_path)
+            available_targets = config.get("settings", {}).get("deployment_targets", [])
+            
+            if not deployment_target:
+                if not available_targets:
+                    raise ValueError(f"No deployment targets available for community agent {final_agent}")
+                
+                # Prompt for deployment target
+                console.print("\n> Please select a deployment target:")
+                for idx, target in enumerate(available_targets, 1):
+                    target_info = {
+                        "agent_engine": {
+                            "display_name": "Vertex AI Agent Engine",
+                            "description": "Vertex AI Managed platform for scalable agent deployments",
+                        },
+                        "cloud_run": {
+                            "display_name": "Cloud Run",
+                            "description": "GCP Serverless container execution",
+                        },
+                    }.get(target, {"display_name": target, "description": ""})
+                    
+                    console.print(
+                        f"{idx}. [bold]{target_info['display_name']}[/] - [dim]{target_info['description']}[/]"
+                    )
+                
+                choice = IntPrompt.ask(
+                    "\nEnter the number of your deployment target choice",
+                    default=1,
+                    show_default=True,
+                )
+                
+                final_deployment = available_targets[choice - 1]
+            else:
+                # Validate the provided deployment target
+                if deployment_target not in available_targets:
+                    raise ValueError(
+                        f"Invalid deployment target '{deployment_target}' for community agent {final_agent}. "
+                        f"Available targets: {available_targets}"
+                    )
+                final_deployment = deployment_target
+        else:
+            # For regular agents, use the existing function
+            final_deployment = (
+                deployment_target
+                if deployment_target
+                else prompt_deployment_target(final_agent)
+            )
+            
         if debug:
             logging.debug(f"Selected deployment target: {final_deployment}")
 
