@@ -110,11 +110,32 @@ def generate_lock_file(pyproject_content: str, output_path: pathlib.Path) -> Non
 def main(template: pathlib.Path) -> None:
     """Generate lock files for all agent and deployment target combinations."""
     lock_dir = ensure_lock_dir()
+    
+    # Get both regular and community agent configs
     agent_configs = get_agent_configs()
+    community_agent_configs = get_agent_configs(agents_dir=pathlib.Path("community"))
 
+    # Process regular agents
     for agent_name, config in agent_configs.items():
         for target in config["deployment_targets"]:
             print(f"Generating lock file for {agent_name} with {target}...")
+
+            # Generate pyproject content
+            content = generate_pyproject(
+                template,
+                deployment_target=target,
+                config=config,
+            )
+
+            # Generate lock file
+            output_path = lock_dir / get_lock_filename(agent_name, target)
+            generate_lock_file(content, output_path)
+            print(f"Generated {output_path}")
+    
+    # Process community agents
+    for agent_name, config in community_agent_configs.items():
+        for target in config["deployment_targets"]:
+            print(f"Generating lock file for community agent {agent_name} with {target}...")
 
             # Generate pyproject content
             content = generate_pyproject(
