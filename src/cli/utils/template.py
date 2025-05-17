@@ -319,7 +319,7 @@ def get_community_template_path(agent_name: str, debug: bool = False) -> pathlib
         
     _, community_agent_name = agent_name.split("/", 1)
     current_dir = pathlib.Path(__file__).parent.parent.parent.parent
-    template_path = current_dir / "community" / "agents" / community_agent_name / "template"
+    template_path = current_dir / "community" / community_agent_name / "template"
     
     if debug:
         logging.debug(f"Looking for community template in: {template_path}")
