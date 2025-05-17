@@ -730,6 +730,9 @@ def process_template(
                     logging.debug(f"Lock file exists: {lock_path.exists()}")
                     
                     if not lock_path.exists():
+                        locks_dir = pathlib.Path(__file__).parent.parent.parent.parent / "src" / "resources" / "locks"
+                        available_locks = list(locks_dir.glob('*.lock'))
+                        logging.error(f"Available lock files: {available_locks}")
                         raise FileNotFoundError(f"Lock file not found: {lock_path} for agent {agent_name} with deployment target {deployment_target}")
                         
                     # Copy and rename to uv.lock in the project directory
@@ -749,10 +752,6 @@ def process_template(
                             f.write(content.replace("{{cookiecutter.project_name}}", project_name))
                             f.truncate()
                         logging.debug(f"Updated project name in lock file at {lock_file_path}")
-                        
-                        # Final verification
-                        if not (final_destination / "uv.lock").exists():
-                            raise FileNotFoundError(f"Lock file missing after template processing: {final_destination / 'uv.lock'}")
                     except Exception as e:
                         logging.error(f"Error handling lock file: {e}")
                         raise RuntimeError(f"Failed to process lock file: {e}")
