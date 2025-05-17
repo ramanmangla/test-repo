@@ -671,21 +671,54 @@ def process_template(
 
                 # After copying template files, handle the lock file
                 if deployment_target:
-                    # For community agents, use the base agent's lock file
-                    agent_for_lock = base_agent_name if is_community_agent else agent_name
-                    
-                    # Get the source lock file path
-                    lock_path = (
-                        pathlib.Path(__file__).parent.parent.parent.parent
-                        / "src"
-                        / "resources"
-                        / "locks"
-                        / f"uv-{agent_for_lock}-{deployment_target}.lock"
-                    )
+                    # Determine which lock file to use
+                    if is_community_agent:
+                        # For community agents, first try to use the community agent's lock file
+                        # If it doesn't exist, fall back to the base agent's lock file
+                        _, community_agent_short_name = agent_name.split("/", 1)
+                        community_lock_path = (
+                            pathlib.Path(__file__).parent.parent.parent.parent
+                            / "src"
+                            / "resources"
+                            / "locks"
+                            / f"uv-{community_agent_short_name}-{deployment_target}.lock"
+                        )
+                        
+                        base_lock_path = (
+                            pathlib.Path(__file__).parent.parent.parent.parent
+                            / "src"
+                            / "resources"
+                            / "locks"
+                            / f"uv-{base_agent_name}-{deployment_target}.lock"
+                        )
+                        
+                        # Try community agent lock file first, then fall back to base agent
+                        if community_lock_path.exists():
+                            lock_path = community_lock_path
+                            logging.debug(f"Using community agent lock file: {lock_path}")
+                        elif base_lock_path.exists():
+                            lock_path = base_lock_path
+                            logging.debug(f"Using base agent lock file as fallback: {lock_path}")
+                        else:
+                            raise FileNotFoundError(
+                                f"Lock file not found for community agent {agent_name} or base agent {base_agent_name}"
+                            )
+                    else:
+                        # For regular agents, use the agent's lock file
+                        lock_path = (
+                            pathlib.Path(__file__).parent.parent.parent.parent
+                            / "src"
+                            / "resources"
+                            / "locks"
+                            / f"uv-{agent_name}-{deployment_target}.lock"
+                        )
+                        
                     logging.debug(f"Looking for lock file at: {lock_path}")
                     logging.debug(f"Lock file exists: {lock_path.exists()}")
+                    
                     if not lock_path.exists():
                         raise FileNotFoundError(f"Lock file not found: {lock_path}")
+                        
                     # Copy and rename to uv.lock in the project directory
                     shutil.copy2(lock_path, final_destination / "uv.lock")
                     logging.debug(
