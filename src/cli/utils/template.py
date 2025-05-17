@@ -700,21 +700,13 @@ def process_template(
                         
                         logging.debug(f"Checking community lock path: {community_lock_path} (exists: {community_lock_path.exists()})")
                         logging.debug(f"Checking base lock path: {base_lock_path} (exists: {base_lock_path.exists()})")
-                        
-                        # Try community agent lock file first, then fall back to base agent
                         if community_lock_path.exists():
                             lock_path = community_lock_path
                             logging.debug(f"Using community agent lock file: {lock_path}")
-                        elif base_lock_path.exists():
-                            lock_path = base_lock_path
-                            logging.debug(f"Using base agent lock file as fallback: {lock_path}")
                         else:
-                            # List all files in the locks directory for debugging
-                            locks_dir = pathlib.Path(__file__).parent.parent.parent.parent / "src" / "resources" / "locks"
-                            available_locks = list(locks_dir.glob('*.lock'))
-                            logging.error(f"Available lock files: {available_locks}")
                             raise FileNotFoundError(
-                                f"Lock file not found for community agent {agent_name} or base agent {base_agent_name} with deployment target {deployment_target}"
+                                f"Community lock file ({community_lock_path}) "
+                                f"not found for community agent {agent_name} with deployment target {deployment_target}"
                             )
                     else:
                         # For regular agents, use the agent's lock file
