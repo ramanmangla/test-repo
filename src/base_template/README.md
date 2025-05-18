@@ -51,7 +51,7 @@ make install && make playground
 | `make backend`       | Deploy agent to Cloud Run |
 | `make local-backend`       | Deploy agent to Cloud Run |
 {%- if cookiecutter.deployment_target == 'cloud_run' %}
-{%- if cookiecutter.agent_name == 'live_api' %}
+{%- if "live_api" in cookiecutter.tags %}
 | `make ui`       | Launch Agent Playground front-end only |
 {%- endif %}
 {%- endif %}
@@ -69,7 +69,7 @@ make install && make playground
 
 For full command options and usage, refer to the [Makefile](Makefile).
 
-{% if cookiecutter.agent_name == 'live_api' %}
+{% if "live_api" in cookiecutter.tags %}
 ## Usage
 
 This template follows a "bring your own agent" approach - you focus on your business logic in `app/agent.py`, and the template handles the surrounding components (UI, infrastructure, deployment, monitoring).
@@ -169,7 +169,7 @@ You can test deployment towards a Dev Environment using the following command:
 gcloud config set project <your-dev-project-id>
 make backend
 ```
-{% if cookiecutter.agent_name == 'live_api' %}
+{% if "live_api" in cookiecutter.tags %}
 **Accessing the Deployed Backend Locally:**
 
 To connect your local frontend (`make ui`) to the backend deployed on Cloud Run, use the `gcloud` proxy:

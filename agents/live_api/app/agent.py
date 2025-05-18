@@ -23,7 +23,7 @@ from google.genai import types
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
 EMBEDDING_MODEL = "text-embedding-004"
-MODEL_ID = "gemini-2.0-flash-exp"
+MODEL_ID = "gemini-2.0-flash-live-001"
 
 # Initialize Google Cloud clients
 credentials, project_id = google.auth.default()

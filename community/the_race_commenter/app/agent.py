@@ -18,20 +18,15 @@ import google
 import vertexai
 from google import genai
 from google.genai import types
-from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_community.retrievers import WikipediaRetriever
 
-from app.templates import FORMAT_DOCS, SYSTEM_INSTRUCTION
-from app.vector_store import get_vector_store
+from app.templates import SYSTEM_INSTRUCTION
 
 # Constants
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
-EMBEDDING_MODEL = "text-embedding-005"
-MODEL_ID = "gemini-2.0-flash-001"
-URLS = [
-    "https://www.iracing.com/largest-iracing-daytona-24-powered-by-vco-in-history-shatters-total-driver-record/",
-    "https://www.iracing.com/this-week-iracing-daytona-24-special-event-2025/",
-]
+MODEL_ID = "gemini-2.0-flash-live-001"
+
 
 # Initialize Google Cloud clients
 credentials, project_id = google.auth.default()
@@ -44,28 +39,21 @@ else:
     # API key should be set using GOOGLE_API_KEY environment variable
     genai_client = genai.Client(http_options={"api_version": "v1alpha"})
 
-# Initialize vector store and retriever
-embedding = VertexAIEmbeddings(model_name=EMBEDDING_MODEL)
-vector_store = get_vector_store(embedding=embedding, urls=URLS)
-retriever = vector_store.as_retriever()
+
+def retrieve_facts(query: str) -> dict:
+    """Retrieves relevant facts from Wikipedia for the race commentary."""
+    try:
+        retriever = WikipediaRetriever(load_max_docs=3) # Limit docs for speed
+        docs = retriever.invoke(query)
+        # Combine the page content of the retrieved documents
+        result = "\n\n".join([doc.page_content for doc in docs])
+        return {"output": result}
+    except Exception as e:
+        # Handle potential errors during retrieval
+        return {"output": f"Error retrieving facts: {e}"}
 
 
-def retrieve_docs(query: str) -> dict[str, str]:
-    """
-    Retrieves pre-formatted documents about MLOps (Machine Learning Operations),
-      Gen AI lifecycle, and production deployment best practices.
-
-    Args:
-        query: Search query string related to MLOps, Gen AI, or production deployment.
-
-    Returns:
-        A set of relevant, pre-formatted documents.
-    """
-    docs = retriever.invoke(query)
-    formatted_docs = FORMAT_DOCS.format(docs=docs)
-    return {"output": formatted_docs}
-
-tool_functions = {"retrieve_docs": retrieve_docs}
+tool_functions = {"retrieve_facts": retrieve_facts}
 
 live_connect_config = types.LiveConnectConfig(
     response_modalities=[types.Modality.AUDIO],
