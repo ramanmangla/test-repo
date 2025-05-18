@@ -138,7 +138,7 @@ class GeminiSession:
             if "toolCall" in raw_message:
                 message = types.LiveServerMessage.model_validate(raw_message)
                 tool_call = LiveServerToolCall.model_validate(message.tool_call)
-                await self._handle_tool_call(self.session, tool_call)
+                asyncio.create_task(self._handle_tool_call(self.session, tool_call))
 
     def _get_func(self, action_label: str | None) -> Callable | None:
         """Get the tool function for a given action label."""
@@ -146,16 +146,11 @@ class GeminiSession:
             return None
         return self.tool_functions.get(action_label)
 
+
     async def _handle_tool_call(
         self, session: Any, tool_call: LiveServerToolCall
     ) -> None:
-        """Process tool calls from Gemini and send back responses.
-
-        Args:
-            session: The Gemini session
-            tool_call: Tool call request from Gemini
-        """
-        # Handle case where function_calls might be None
+        """Process tool calls from Gemini and send back responses."""
         if tool_call.function_calls is None:
             logging.debug("No function calls in tool_call")
             return
@@ -167,7 +162,14 @@ class GeminiSession:
                 logging.error(f"Function {fc.name} not found")
                 continue
             args = fc.args if fc.args is not None else {}
-            response = func(**args)
+
+            # Handle both async and sync functions appropriately
+            if asyncio.iscoroutinefunction(func):
+                # Function is already async
+                response = await func(**args)
+            else:
+                # Run sync function in a thread pool to avoid blocking
+                response = await asyncio.to_thread(func, **args)
 
             tool_response = types.LiveClientToolResponse(
                 function_responses=[
@@ -176,6 +178,7 @@ class GeminiSession:
             )
             logging.debug(f"Tool response: {tool_response}")
             await session.send(input=tool_response)
+
 
 
 def get_connect_and_run_callable(websocket: WebSocket) -> Callable:
