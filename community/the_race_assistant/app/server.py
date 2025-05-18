@@ -1,3 +1,18 @@
+
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import asyncio
 import json
 import logging
@@ -39,8 +54,6 @@ class GeminiSession:
         self.tool_functions = tool_functions
         # Track when we last received output from Gemini
         self.last_model_message_time = asyncio.get_event_loop().time()
-        # Track the last audio token count
-        self.last_audio_token_count = 0
 
     async def receive_from_client(self) -> None:
         """Listen for and process messages from the client."""
@@ -74,8 +87,7 @@ class GeminiSession:
             timer_task.cancel()
 
     async def send_continue_prompt(self):
-        """Sends a 'continue' message to Gemini only if it hasn't sent data recently.
-        Wait time is dynamically calculated based on audio token count."""
+        """Sends a 'continue' message to Gemini only if it hasn't sent data recently."""
         continue_message = {
             'clientContent': {
                 'turns': [
@@ -92,23 +104,15 @@ class GeminiSession:
         
         while True:
             try:
-                # Very aggressive dynamic waiting - 0.25 seconds per token
-                # This means a 225 token response would wait ~56 seconds plus base time
-                base_wait_time = 1  # Minimum base wait
-                wait_time = base_wait_time + (self.last_audio_token_count * 0.040)
-                
-                logging.info(f"Waiting {wait_time:.1f} seconds based on {self.last_audio_token_count} audio tokens")
-                await asyncio.sleep(wait_time)
-                
+                await asyncio.sleep(20)
                 current_time = asyncio.get_event_loop().time()
+                # Check if the model has been silent for more than 10 seconds
                 time_since_last_message = current_time - self.last_model_message_time
                 
                 if hasattr(self, 'session') and hasattr(self.session, '_ws'):
-                    if time_since_last_message > wait_time:
+                    if time_since_last_message > 20:
                         logging.info("Sending continue prompt to Gemini")
                         await self.session._ws.send(json.dumps(continue_message))
-                        # Reset audio token count after sending continue
-                        self.last_audio_token_count = 0
                     else:
                         logging.info("Skipping continue prompt, model is already active")
             except asyncio.CancelledError:
@@ -125,20 +129,10 @@ class GeminiSession:
             
             await self.websocket.send_bytes(result)
             raw_message = json.loads(result)
-            
-            # Extract audio token count if available in the response metadata
-            if "usageMetadata" in raw_message:
-                candidates_tokens_details = raw_message["usageMetadata"].get("candidatesTokensDetails", [])
-                for token_detail in candidates_tokens_details:
-                    if token_detail.get("modality") == "AUDIO":
-                        self.last_audio_token_count = token_detail.get("tokenCount", 0)
-                        logging.info(f"Detected audio response with {self.last_audio_token_count} tokens")
-                        logging.info(f"Next continue prompt will wait ~{1 + (self.last_audio_token_count * 0.040):.1f} seconds")
-            
             if "toolCall" in raw_message:
                 message = types.LiveServerMessage.model_validate(raw_message)
                 tool_call = LiveServerToolCall.model_validate(message.tool_call)
-                asyncio.create_task(self._handle_tool_call(self.session, tool_call))
+                await self._handle_tool_call(self.session, tool_call)
 
     def _get_func(self, action_label: str | None) -> Callable | None:
         """Get the tool function for a given action label."""
@@ -146,11 +140,16 @@ class GeminiSession:
             return None
         return self.tool_functions.get(action_label)
 
-
     async def _handle_tool_call(
         self, session: Any, tool_call: LiveServerToolCall
     ) -> None:
-        """Process tool calls from Gemini and send back responses."""
+        """Process tool calls from Gemini and send back responses.
+
+        Args:
+            session: The Gemini session
+            tool_call: Tool call request from Gemini
+        """
+        # Handle case where function_calls might be None
         if tool_call.function_calls is None:
             logging.debug("No function calls in tool_call")
             return
@@ -162,14 +161,7 @@ class GeminiSession:
                 logging.error(f"Function {fc.name} not found")
                 continue
             args = fc.args if fc.args is not None else {}
-
-            # Handle both async and sync functions appropriately
-            if asyncio.iscoroutinefunction(func):
-                # Function is already async
-                response = await func(**args)
-            else:
-                # Run sync function in a thread pool to avoid blocking
-                response = await asyncio.to_thread(func, **args)
+            response = func(**args)
 
             tool_response = types.LiveClientToolResponse(
                 function_responses=[
@@ -179,6 +171,19 @@ class GeminiSession:
             logging.debug(f"Tool response: {tool_response}")
             await session.send(input=tool_response)
 
+    async def receive_from_gemini(self) -> None:
+        """Listen for and process messages from Gemini.
+
+        Continuously receives messages from Gemini, forwards them to the client,
+        and handles any tool calls. Handles connection errors gracefully.
+        """
+        while result := await self.session._ws.recv(decode=False):
+            await self.websocket.send_bytes(result)
+            raw_message = json.loads(result)
+            if "toolCall" in raw_message:
+                message = types.LiveServerMessage.model_validate(raw_message)
+                tool_call = LiveServerToolCall.model_validate(message.tool_call)
+                await self._handle_tool_call(self.session, tool_call)
 
 
 def get_connect_and_run_callable(websocket: WebSocket) -> Callable:

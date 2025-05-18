@@ -39,6 +39,7 @@ else:
     # API key should be set using GOOGLE_API_KEY environment variable
     genai_client = genai.Client(http_options={"api_version": "v1alpha"})
 
+
 async def get_wikipedia_info(query: str) -> dict:
     """Retrieves information from Wikipedia.
 
@@ -60,6 +61,7 @@ async def get_wikipedia_info(query: str) -> dict:
     except Exception as e:
         # Catch potential exceptions during retrieval (e.g., network issues)
         return {"output": f"An error occurred while searching Wikipedia: {e}"}
+
 
 # Configure tools available to the agent and live connection
 tool_functions = {"get_wikipedia_info": get_wikipedia_info}
