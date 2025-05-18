@@ -18,7 +18,7 @@ import pathlib
 import shutil
 import tempfile
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from cookiecutter.main import cookiecutter
@@ -316,12 +316,12 @@ def handle_lock_file(
     agent_name: str,
     deployment_target: str,
     is_community_agent: bool,
-    base_agent_name: Optional[str],
+    base_agent_name: str | None,
     final_destination: pathlib.Path,
     project_name: str,
 ) -> None:
     """Handle the lock file for the template.
-    
+
     Args:
         agent_name: Name of the agent
         deployment_target: Deployment target (agent_engine or cloud_run)
@@ -329,7 +329,7 @@ def handle_lock_file(
         base_agent_name: Name of the base agent (for community agents)
         final_destination: Path to the final project directory
         project_name: Name of the project
-        
+
     Raises:
         FileNotFoundError: If the lock file is not found
         RuntimeError: If there's an error processing the lock file
@@ -339,12 +339,12 @@ def handle_lock_file(
         # For community agents, first try to use the community agent's lock file
         # If it doesn't exist, fall back to the base agent's lock file
         _, community_agent_short_name = agent_name.split("/", 1)
-        
+
         # Debug the lock file path construction
         logging.debug(f"Community agent short name: {community_agent_short_name}")
-        
+
         # Format the community agent name with underscore (same as in generate_locks.py)
-        community_name = f"community/{community_agent_short_name}".replace('/', '_')
+        community_name = f"community/{community_agent_short_name}".replace("/", "_")
         community_lock_path = (
             pathlib.Path(__file__).parent.parent.parent.parent
             / "src"
@@ -352,7 +352,7 @@ def handle_lock_file(
             / "locks"
             / f"uv-{community_name}-{deployment_target}.lock"
         )
-        
+
         base_lock_path = (
             pathlib.Path(__file__).parent.parent.parent.parent
             / "src"
@@ -360,10 +360,14 @@ def handle_lock_file(
             / "locks"
             / f"uv-{base_agent_name}-{deployment_target}.lock"
         )
-        
-        logging.debug(f"Checking community lock path: {community_lock_path} (exists: {community_lock_path.exists()})")
-        logging.debug(f"Checking base lock path: {base_lock_path} (exists: {base_lock_path.exists()})")
-        
+
+        logging.debug(
+            f"Checking community lock path: {community_lock_path} (exists: {community_lock_path.exists()})"
+        )
+        logging.debug(
+            f"Checking base lock path: {base_lock_path} (exists: {base_lock_path.exists()})"
+        )
+
         if community_lock_path.exists():
             lock_path = community_lock_path
             logging.debug(f"Using community agent lock file: {lock_path}")
@@ -381,25 +385,36 @@ def handle_lock_file(
             / "locks"
             / f"uv-{agent_name}-{deployment_target}.lock"
         )
-        
+
     logging.debug(f"Using lock file: {lock_path}")
     logging.debug(f"Lock file exists: {lock_path.exists()}")
-    
+
     if not lock_path.exists():
-        locks_dir = pathlib.Path(__file__).parent.parent.parent.parent / "src" / "resources" / "locks"
-        available_locks = list(locks_dir.glob('*.lock'))
+        locks_dir = (
+            pathlib.Path(__file__).parent.parent.parent.parent
+            / "src"
+            / "resources"
+            / "locks"
+        )
+        available_locks = list(locks_dir.glob("*.lock"))
         logging.error(f"Available lock files: {available_locks}")
-        raise FileNotFoundError(f"Lock file not found: {lock_path} for agent {agent_name} with deployment target {deployment_target}")
-        
+        raise FileNotFoundError(
+            f"Lock file not found: {lock_path} for agent {agent_name} with deployment target {deployment_target}"
+        )
+
     # Copy and rename to uv.lock in the project directory
     try:
         shutil.copy2(lock_path, final_destination / "uv.lock")
-        logging.debug(f"Copied lock file from {lock_path} to {final_destination / 'uv.lock'}")
-        
+        logging.debug(
+            f"Copied lock file from {lock_path} to {final_destination / 'uv.lock'}"
+        )
+
         # Verify the lock file was copied successfully
         if not (final_destination / "uv.lock").exists():
-            raise FileNotFoundError(f"Lock file not found at {final_destination / 'uv.lock'} after copying")
-            
+            raise FileNotFoundError(
+                f"Lock file not found at {final_destination / 'uv.lock'} after copying"
+            )
+
         # Replace cookiecutter project name with actual project name in lock file
         lock_file_path = final_destination / "uv.lock"
         with open(lock_file_path, "r+", encoding="utf-8") as f:
@@ -417,11 +432,11 @@ def get_community_template_path(agent_name: str, debug: bool = False) -> pathlib
     """Get the absolute path to the community agent template directory."""
     if not agent_name.startswith("community/"):
         raise ValueError(f"Not a community agent: {agent_name}")
-        
+
     _, community_agent_name = agent_name.split("/", 1)
     current_dir = pathlib.Path(__file__).parent.parent.parent.parent
     template_path = current_dir / "community" / community_agent_name / "template"
-    
+
     if debug:
         logging.debug(f"Looking for community template in: {template_path}")
         logging.debug(f"Template exists: {template_path.exists()}")
@@ -433,12 +448,13 @@ def get_community_template_path(agent_name: str, debug: bool = False) -> pathlib
 
     return template_path
 
+
 def get_template_path(agent_name: str, debug: bool = False) -> pathlib.Path:
     """Get the absolute path to the agent template directory."""
     # Handle community agents
     if agent_name.startswith("community/"):
         return get_community_template_path(agent_name, debug)
-        
+
     current_dir = pathlib.Path(__file__).parent.parent.parent.parent
     template_path = current_dir / "agents" / agent_name / "template"
     if debug:
@@ -481,24 +497,27 @@ def copy_data_ingestion_files(
 
 def get_base_agent_name(community_agent_name: str) -> str:
     """Get the name of the base agent that a community agent extends.
-    
+
     Args:
         community_agent_name: Full name of the community agent (including 'community/' prefix)
-        
+
     Returns:
         Name of the base agent
     """
     if not community_agent_name.startswith("community/"):
         raise ValueError(f"Not a community agent: {community_agent_name}")
-        
+
     template_path = get_community_template_path(community_agent_name)
     config = load_template_config(template_path)
-    
+
     base_agent = config.get("settings", {}).get("extends")
     if not base_agent:
-        raise ValueError(f"Community agent {community_agent_name} must extend a base agent")
-        
+        raise ValueError(
+            f"Community agent {community_agent_name} must extend a base agent"
+        )
+
     return base_agent
+
 
 def process_template(
     agent_name: str,
@@ -527,12 +546,12 @@ def process_template(
     # Check if this is a community agent
     is_community_agent = agent_name.startswith("community/")
     base_agent_name = None
-    
+
     if is_community_agent:
         # Get the base agent name
         base_agent_name = get_base_agent_name(agent_name)
         logging.debug(f"Community agent extends: {base_agent_name}")
-    
+
     # Get paths
     if is_community_agent:
         _, community_agent_name = agent_name.split("/", 1)
@@ -613,12 +632,17 @@ def process_template(
 
             # 5. If this is a community agent, first copy the base agent files
             if is_community_agent and base_agent_name:
-                base_agent_template_path = pathlib.Path(__file__).parent.parent.parent.parent / "agents" / base_agent_name / "template"
+                base_agent_template_path = (
+                    pathlib.Path(__file__).parent.parent.parent.parent
+                    / "agents"
+                    / base_agent_name
+                    / "template"
+                )
                 base_agent_path = base_agent_template_path.parent
-                
+
                 # First load the base agent's template config
                 base_config = load_template_config(base_agent_template_path)
-                
+
                 # Copy base agent files
                 for folder in OVERWRITE_FOLDERS:
                     base_agent_folder = base_agent_path / folder
@@ -626,9 +650,12 @@ def process_template(
                     if base_agent_folder.exists():
                         logging.debug(f"5. Copying base agent folder {folder}")
                         copy_files(
-                            base_agent_folder, project_folder, agent_name=base_agent_name, overwrite=True
+                            base_agent_folder,
+                            project_folder,
+                            agent_name=base_agent_name,
+                            overwrite=True,
                         )
-                
+
                 # Copy base agent README.md if it exists
                 base_agent_readme = base_agent_path / "README.md"
                 if base_agent_readme.exists():
@@ -696,7 +723,9 @@ def process_template(
             tags = template_config.get("settings", {}).get("tags", ["None"])
             cookiecutter_config = {
                 "project_name": "my-project",
-                "agent_name": community_agent_name if is_community_agent else agent_name,
+                "agent_name": community_agent_name
+                if is_community_agent
+                else agent_name,
                 "package_version": get_current_version(),
                 "agent_description": template_config.get("description", ""),
                 "example_question": template_config.get("example_question", "").ljust(
@@ -742,7 +771,9 @@ def process_template(
                 no_input=True,
                 extra_context={
                     "project_name": project_name,
-                    "agent_name": community_agent_name if is_community_agent else agent_name,
+                    "agent_name": community_agent_name
+                    if is_community_agent
+                    else agent_name,
                 },
             )
             logging.debug("Template processing completed successfully")

@@ -15,6 +15,7 @@
 description: "A real-time multimodal RAG agent powered by Gemini Live API, supporting audio/video/text chat with vector DB-backed responses"
 settings:
   requires_data_ingestion: false
+  tags: ["live_api"]
   frontend_type: "live_api_react"
   deployment_targets: ["cloud_run"]
   extra_dependencies: [

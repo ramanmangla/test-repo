@@ -175,9 +175,11 @@ def create(
                 try:
                     template_path = get_template_path(agent, debug=debug)
                     if debug:
-                        logging.debug(f"Found community agent template at: {template_path}")
+                        logging.debug(
+                            f"Found community agent template at: {template_path}"
+                        )
                 except ValueError as e:
-                    raise ValueError(f"Invalid community agent: {agent}. {str(e)}")
+                    raise ValueError(f"Invalid community agent: {agent}. {e!s}")
             else:
                 # Handle regular agent selection
                 agents = get_available_agents()
@@ -193,7 +195,9 @@ def create(
                         else:
                             raise ValueError(f"Invalid agent number: {agent_num}")
                     except ValueError as err:
-                        raise ValueError(f"Invalid agent name or number: {agent}") from err
+                        raise ValueError(
+                            f"Invalid agent name or number: {agent}"
+                        ) from err
 
         final_agent = (
             selected_agent
@@ -241,11 +245,13 @@ def create(
             template_path = get_template_path(final_agent, debug=debug)
             config = load_template_config(template_path)
             available_targets = config.get("settings", {}).get("deployment_targets", [])
-            
+
             if not deployment_target:
                 if not available_targets:
-                    raise ValueError(f"No deployment targets available for community agent {final_agent}")
-                
+                    raise ValueError(
+                        f"No deployment targets available for community agent {final_agent}"
+                    )
+
                 # Prompt for deployment target
                 console.print("\n> Please select a deployment target:")
                 for idx, target in enumerate(available_targets, 1):
@@ -259,17 +265,17 @@ def create(
                             "description": "GCP Serverless container execution",
                         },
                     }.get(target, {"display_name": target, "description": ""})
-                    
+
                     console.print(
                         f"{idx}. [bold]{target_info['display_name']}[/] - [dim]{target_info['description']}[/]"
                     )
-                
+
                 choice = IntPrompt.ask(
                     "\nEnter the number of your deployment target choice",
                     default=1,
                     show_default=True,
                 )
-                
+
                 final_deployment = available_targets[choice - 1]
             else:
                 # Validate the provided deployment target
@@ -286,7 +292,7 @@ def create(
                 if deployment_target
                 else prompt_deployment_target(final_agent)
             )
-            
+
         if debug:
             logging.debug(f"Selected deployment target: {final_deployment}")
 

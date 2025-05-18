@@ -18,14 +18,13 @@ import google
 import vertexai
 from google import genai
 from google.genai import types
-from langchain_community.retrievers import WikipediaRetriever
 
 from app.templates import SYSTEM_INSTRUCTION
 
 # Constants
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
-MODEL_ID = "gemini-2.0-flash-live-001"
+MODEL_ID = "gemini-2.0-flash-live-preview-04-09"
 
 
 # Initialize Google Cloud clients
@@ -39,25 +38,13 @@ else:
     # API key should be set using GOOGLE_API_KEY environment variable
     genai_client = genai.Client(http_options={"api_version": "v1alpha"})
 
-
-def retrieve_facts(query: str) -> dict:
-    """Retrieves relevant facts from Wikipedia for the race commentary."""
-    try:
-        retriever = WikipediaRetriever(load_max_docs=3) # Limit docs for speed
-        docs = retriever.invoke(query)
-        # Combine the page content of the retrieved documents
-        result = "\n\n".join([doc.page_content for doc in docs])
-        return {"output": result}
-    except Exception as e:
-        # Handle potential errors during retrieval
-        return {"output": f"Error retrieving facts: {e}"}
-
-
-tool_functions = {"retrieve_facts": retrieve_facts}
+# Configure tools available to the agent and live connection
+tool_functions = {}
 
 live_connect_config = types.LiveConnectConfig(
     response_modalities=[types.Modality.AUDIO],
     tools=list(tool_functions.values()),
+    # tools=[types.Tool(google_search=types.GoogleSearch())],
     # Change to desired language code (e.g., "es-ES" for Spanish, "fr-FR" for French)
     speech_config=types.SpeechConfig(language_code="en-US"),
     system_instruction=types.Content(parts=[{"text": SYSTEM_INSTRUCTION}]),
