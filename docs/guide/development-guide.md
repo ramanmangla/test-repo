@@ -83,7 +83,6 @@ Track your agent's performance and gather insights using integrated observabilit
 *   **Looker Studio Dashboards**: Visualize agent performance with pre-built templates:
     *   ADK Agents: [Looker Studio ADK Dashboard](https://lookerstudio.google.com/c/reporting/46b35167-b38b-4e44-bd37-701ef4307418/page/tEnnC)
     *   Non-ADK Agents: [Looker Studio Non-ADK Dashboard](https://lookerstudio.google.com/c/reporting/fa742264-4b4b-4c56-81e6-a667dd0f853f/page/tEnnC)
-    *(Remember to follow the "Setup Instructions" within the dashboards to connect your project's data sources).*
 
 ➡️ For details, see the [Observability Guide](./observability.md).
 

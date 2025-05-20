@@ -134,7 +134,7 @@ def create(
         console.print("\n=== GCP Agent Starter Pack :rocket:===", style="bold blue")
         console.print("Welcome to the Agent Starter Pack!")
         console.print(
-            "This tool will help you create an end-to-end production-ready AI agent in GCP!\n"
+            "This tool will help you create an end-to-end production-ready AI agent in Google Cloud!\n"
         )
         # Validate project name
         if len(project_name) > 26:
@@ -317,9 +317,8 @@ def create(
 
         console.print("\n> Success! Your agent project is ready.")
         console.print(
-            "\n📖 For more information on project structure, usage, and deployment, check out the README:"
+            f"\n📖 Local README: [cyan]cat {cd_path}/README.md[/] | Online: [cyan][link=https://googlecloudplatform.github.io/agent-starter-pack/guide/development-guide.html]Development Guide[/link][/]"
         )
-        console.print(f"   [cyan]cat {cd_path}/README.md[/]")
         # Determine the correct path to display based on whether output_dir was specified
         console.print("\n🚀 To get started, run the following command:")
         console.print(
