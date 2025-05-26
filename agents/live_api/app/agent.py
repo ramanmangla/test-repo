@@ -63,6 +63,11 @@ live_connect_config = types.LiveConnectConfig(
             )
         ]
     ),
+    speech_config=types.SpeechConfig(
+        voice_config=types.VoiceConfig(
+            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Kore")
+        )
+    ),
     proactivity=types.ProactivityConfig(proactive_audio=True),
     enable_affective_dialog=True,
 )
