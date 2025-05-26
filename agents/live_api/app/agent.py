@@ -22,7 +22,7 @@ from google.genai import types
 # Constants
 VERTEXAI = os.getenv("VERTEXAI", "true").lower() == "true"
 LOCATION = "us-central1"
-MODEL_ID = "gemini-2.0-flash-live-preview-04-09"
+MODEL_ID = "gemini-2.5-flash-preview-native-audio-dialog"
 
 # Initialize Google Cloud clients
 credentials, project_id = google.auth.default()
@@ -56,8 +56,6 @@ tool_functions = {"get_weather": get_weather}
 live_connect_config = types.LiveConnectConfig(
     response_modalities=[types.Modality.AUDIO],
     tools=list(tool_functions.values()),
-    # Change to desired language code (e.g., "es-ES" for Spanish, "fr-FR" for French)
-    speech_config=types.SpeechConfig(language_code="en-US"),
     system_instruction=types.Content(
         parts=[
             types.Part(
@@ -65,4 +63,6 @@ live_connect_config = types.LiveConnectConfig(
             )
         ]
     ),
+    proactivity=types.ProactivityConfig(proactive_audio=True),
+    enable_affective_dialog=True,
 )
