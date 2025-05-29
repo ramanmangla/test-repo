@@ -13,8 +13,8 @@ This guide quickly walks you through setting up your first agent project.
 
 ```bash
 # Create and activate a Python virtual environment (Recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install the package
 pip install agent-starter-pack
