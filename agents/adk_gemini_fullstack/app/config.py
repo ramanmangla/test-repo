@@ -20,8 +20,8 @@ class ResearchConfiguration:
     """Configuration for research-related models and parameters.
 
     Attributes:
-        critic_model (str): Model for evaluation tasks (e.g., "gemini-2.5-pro").
-        worker_model (str): Model for working/generation tasks (e.g., "gemini-2.5-flash").
+        critic_model (str): Model for evaluation tasks.
+        worker_model (str): Model for working/generation tasks.
         max_search_iterations (int): Maximum search iterations allowed.
     """
 
