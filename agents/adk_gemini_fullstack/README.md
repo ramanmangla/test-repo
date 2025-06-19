@@ -72,9 +72,7 @@ Your agent is now running at `http://localhost:5173`.
 
 ### B. Google Cloud Vertex AI
 
-**You'll also need:**
-*   **[Google Cloud SDK](https://cloud.google.com/sdk/docs/install)** 
-*   A **Google Cloud Project** with the **Vertex AI API** enabled.
+You'll also need: **[Google Cloud SDK](https://cloud.google.com/sdk/docs/install)** and a **Google Cloud Project** with the **Vertex AI API** enabled.
 
 **Step 1: Create Project from Template**
 This command uses the [Agent Starter Pack](goo.gle/agent-starter-pack) to create a new directory (`my-fullstack-agent`) with all the necessary code.
