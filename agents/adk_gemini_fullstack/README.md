@@ -30,16 +30,25 @@ Here's a screenshot of the application in action:
 This project adapts concepts from the [Gemini FullStack LangGraph Quickstart](https://github.com/google-gemini/gemini-fullstack-langgraph-quickstart) for the frontend app. 
 
 ## 🚀 Getting Started: From Zero to Running Agent in 1 Minute
+<table>
+  <thead>
+    <tr>
+      <th colspan="3">Prerequisites</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><a href="https://www.python.org/downloads/">Python 3.10+</a></strong></td>
+      <td><strong><a href="https://nodejs.org/">Node.js</a></strong> (which includes <code>npm</code>)</td>
+      <td><strong><a href="https://github.com/astral-sh/uv">uv</a></strong></td>
+    </tr>
+  </tbody>
+</table>
 
 You have two options to get started. Choose the one that best fits your setup:
 
 *   A. **[Google AI Studio](#a-google-ai-studio)**: Choose this path if you want to use a **Google AI Studio API key**. This method involves cloning the sample repository.
 *   B. **[Google Cloud Vertex AI](#b-google-cloud-vertex-ai)**: Choose this path if you want to use an existing **Google Cloud project** for authentication. This method generates a new, prod-ready project using the [agent-starter-pack](https://goo.gle/agent-starter-pack).
-
-**Prerequisites:**
-*   **[Python 3.10+](https://www.python.org/downloads/)**
-*   **[Node.js](https://nodejs.org/) (which includes `npm`)**
-*   **[uv](https://github.com/astral-sh/uv)**
 
 ---
 
