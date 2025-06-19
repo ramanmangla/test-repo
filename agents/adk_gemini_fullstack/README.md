@@ -35,7 +35,7 @@ We offer two paths to get started, tailored to your needs. Choose the one that f
 * **[A. Quickstart with AI Studio](#a-quickstart-with-ai-studio)**: Quickly prototyping with a simple API key.
 * **[B. Production-Ready with Vertex AI](#b-production-ready-with-vertex-ai-google-cloud-project)**: Building a full application on Google Cloud with robust deployment options.
 
-**Prerequisites for both paths:**
+**Prerequisites:**
 *   **[Python 3.10+](https://www.python.org/downloads/)**
 *   **[Node.js](https://nodejs.org/) (which includes `npm`)**
 *   **[uv](https://github.com/astral-sh/uv)**
