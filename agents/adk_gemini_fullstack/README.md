@@ -28,7 +28,7 @@ The **Gemini Fullstack Agent Development Kit (ADK) Quickstart** is a production-
 
 This project adapts concepts from the [Gemini FullStack LangGraph Quickstart](https://github.com/google-gemini/gemini-fullstack-langgraph-quickstart) for the frontend app. 
 
-## 🚀 Getting Started: From Zero to Running Agent
+## 🚀 Getting Started: From Zero to Running Agent in 1 Minute
 
 We offer two paths to get started, tailored to your needs. Choose the one that fits you best.
 
