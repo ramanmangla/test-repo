@@ -30,10 +30,10 @@ This project adapts concepts from the [Gemini FullStack LangGraph Quickstart](ht
 
 ## 🚀 Getting Started: From Zero to Running Agent in 1 Minute
 
-We offer two paths to get started, tailored to your needs. Choose the one that fits you best.
+You have two options to get started. Choose the one that best fits your setup:
 
-* **[A. Quickstart with AI Studio](#a-quickstart-with-ai-studio)**: Quickly prototyping with a simple API key.
-* **[B. Production-Ready with Vertex AI](#b-production-ready-with-vertex-ai-google-cloud-project)**: Building a full application on Google Cloud with robust deployment options.
+*   **[A. Google AI Studio](#a-google-ai-studio)**: Choose this path if you want to use a **Google AI Studio API key**. This method involves cloning a the sample repository.
+*   **[B. Google Cloud Vertex AI](#b-google-cloud-vertex-ai)**: Choose this path if you want to use an existing **Google Cloud project** for authentication. This method generates a new, prod-ready project using [agent-starter-pack](https://goo.gle/agent-starter-pack).
 
 **Prerequisites:**
 *   **[Python 3.10+](https://www.python.org/downloads/)**
@@ -42,7 +42,7 @@ We offer two paths to get started, tailored to your needs. Choose the one that f
 
 ---
 
-### A. Quickstart with AI Studio
+### A. Google AI Studio
 
 You'll need a **[Google AI Studio API Key](https://aistudio.google.com/app/apikey)**.
 
@@ -70,11 +70,9 @@ Your agent is now running at `http://localhost:5173`.
 
 ---
 
-### B. Production-Ready with Vertex AI (Google Cloud Project)
+### B. Google Cloud Vertex AI
 
-This path uses the [Agent Starter Pack](goo.gle/agent-starter-pack) to generate a complete project structure with deployment scripts for Google Cloud.
-
-**You'll need:**
+**You'll also need:**
 *   **[Google Cloud SDK](https://cloud.google.com/sdk/docs/install)** 
 *   A **Google Cloud Project** with the **Vertex AI API** enabled.
 
