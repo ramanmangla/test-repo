@@ -32,10 +32,8 @@ This project adapts concepts from the [Gemini FullStack LangGraph Quickstart](ht
 
 We offer two paths to get started, tailored to your needs. Choose the one that fits you best.
 
-| Path | Best For... | Setup Method |
-| :--- | :--- | :--- |
-| [**A. Quickstart with AI Studio**](#a-quickstart-with-ai-studio) | Quickly prototyping with a simple API key. | Cloning the repository. |
-| [**B. Production-Ready with Vertex AI**](#b-production-ready-with-vertex-ai-google-cloud-project) | Building a full application on Google Cloud with robust deployment options.  |
+* **[A. Quickstart with AI Studio](#a-quickstart-with-ai-studio)**: Quickly prototyping with a simple API key.
+* **[B. Production-Ready with Vertex AI](#b-production-ready-with-vertex-ai-google-cloud-project)**: Building a full application on Google Cloud with robust deployment options.
 
 **Prerequisites for both paths:**
 *   **[Python 3.10+](https://www.python.org/downloads/)**
