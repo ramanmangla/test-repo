@@ -24,7 +24,7 @@ from typing import Any
 import yaml
 from cookiecutter.main import cookiecutter
 from rich.console import Console
-from rich.prompt import Prompt, IntPrompt
+from rich.prompt import IntPrompt, Prompt
 
 from src.cli.utils.version import get_current_version
 
