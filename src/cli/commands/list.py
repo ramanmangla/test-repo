@@ -13,172 +13,146 @@
 # limitations under the License.
 
 import logging
-import subprocess
-import tempfile
-from pathlib import Path
-from typing import Any
+import pathlib
 
 import click
 import yaml
 from rich.console import Console
 from rich.table import Table
 
-from ..utils.logging import handle_cli_error
+from ..utils.remote_template import fetch_remote_template, parse_agent_spec
 from ..utils.template import get_available_agents
 
 console = Console()
 
 
-@click.command()
+def display_agents_from_path(base_path: pathlib.Path, source_name: str) -> None:
+    """Scans a directory and displays available agents."""
+    table = Table(
+        title=f"Available agents in [bold blue]{source_name}[/]",
+        show_header=True,
+        header_style="bold magenta",
+    )
+    table.add_column("Name", style="bold")
+    table.add_column("Path", style="cyan")
+    table.add_column("Description", style="dim")
+
+    if not base_path.is_dir():
+        console.print(f"Directory not found: {base_path}", style="bold red")
+        return
+
+    found_agents = False
+    # Search for templateconfig.yaml files to identify agents
+    for config_path in sorted(base_path.glob("**/templateconfig.yaml")):
+        try:
+            with open(config_path) as f:
+                config = yaml.safe_load(f)
+
+            agent_name = config.get("name", config_path.parent.parent.name)
+            description = config.get("description", "No description.")
+
+            # Display the agent's path relative to the scanned directory
+            relative_path = config_path.parent.parent.relative_to(base_path)
+
+            table.add_row(agent_name, f"/{relative_path}", description)
+            found_agents = True
+
+        except Exception as e:
+            logging.warning(
+                f"Could not load agent from {config_path.parent.parent}: {e}"
+            )
+
+    if not found_agents:
+        console.print(f"No agents found in {source_name}", style="yellow")
+    else:
+        console.print(table)
+
+
+def list_remote_agents(remote_source: str, scan_from_root: bool = False) -> None:
+    """Lists agents from a remote source (Git URL)."""
+    spec = parse_agent_spec(remote_source)
+    if not spec:
+        console.print(f"Invalid remote source: {remote_source}", style="bold red")
+        return
+
+    console.print(f"\nFetching agents from [bold blue]{remote_source}[/]...")
+
+    try:
+        # fetch_remote_template clones the repo and returns a path to the
+        # specific template directory within the repo.
+        template_dir_path = fetch_remote_template(spec)
+
+        if scan_from_root:
+            # For ADK, we want to scan the entire repo. We need to find the
+            # root of the repo and scan from there.
+            scan_path = template_dir_path
+            while not (scan_path / ".git").exists() and scan_path.parent != scan_path:
+                scan_path = scan_path.parent
+        else:
+            # For other git repos, respect the path given in the URL.
+            scan_path = template_dir_path
+
+        display_agents_from_path(scan_path, remote_source)
+
+    except (RuntimeError, FileNotFoundError) as e:
+        console.print(f"Error: {e}", style="bold red")
+
+
+@click.command("list")
+@click.option(
+    "--adk",
+    is_flag=True,
+    help="List agents from the official google/adk-samples repository.",
+)
 @click.option(
     "--source",
     "-s",
-    type=click.Choice(["local", "adk"]),
-    default="local",
-    help="Source of templates to list (local or adk-samples)",
+    help="List agents from a local path or a remote Git URL.",
 )
-@click.option("--debug", is_flag=True, help="Enable debug logging")
-@handle_cli_error
-def list_templates(source: str, debug: bool) -> None:
-    """List available agent templates."""
-    if debug:
-        logging.basicConfig(level=logging.DEBUG)
-        console.print("> Debug mode enabled")
-        logging.debug("Starting list command in debug mode")
+def list_agents(adk: bool, source: str | None) -> None:
+    """
+    Lists available agent templates.
 
-    if source == "local":
-        list_local_templates()
-    elif source == "adk":
-        list_adk_templates()
-
-
-def list_local_templates() -> None:
-    """List locally available templates."""
-    console.print("\n[bold blue]Local Agent Templates[/]")
-    console.print("These templates are available locally:")
-
-    agents = get_available_agents()
-
-    if not agents:
-        console.print("No local templates found.")
+    Defaults to listing built-in agents if no options are provided.
+    """
+    if adk and source:
+        console.print(
+            "Error: --adk and --source are mutually exclusive.", style="bold red"
+        )
         return
 
-    table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Number", style="dim", width=8)
+    if adk:
+        list_remote_agents("https://github.com/google/adk-samples", scan_from_root=True)
+        return
+
+    if source:
+        source_path = pathlib.Path(source)
+        if source_path.is_dir():
+            display_agents_from_path(source_path, f"local directory '{source}'")
+        elif parse_agent_spec(source):
+            list_remote_agents(source)
+        else:
+            console.print(
+                f"Error: Source '{source}' is not a valid local directory or remote URL.",
+                style="bold red",
+            )
+        return
+
+    # Default behavior: list built-in agents
+    agents = get_available_agents()
+    if not agents:
+        console.print("No built-in agents found.", style="yellow")
+        return
+
+    table = Table(
+        title="Available built-in agents",
+        show_header=True,
+        header_style="bold magenta",
+    )
+    table.add_column("Number", style="dim", width=12)
     table.add_column("Name", style="bold")
     table.add_column("Description")
 
-    for num, agent in agents.items():
-        table.add_row(str(num), agent["name"], agent["description"])
-
+    for i, (_, agent) in enumerate(agents.items()):
+        table.add_row(str(i + 1), agent["name"], agent["description"])
     console.print(table)
-
-
-def list_adk_templates() -> None:
-    """List templates from adk-samples repository."""
-    console.print("\n[bold blue]ADK Samples Templates[/]")
-    console.print("Templates available from google/adk-samples:")
-
-    try:
-        templates = fetch_adk_templates()
-
-        if not templates:
-            console.print("No ADK templates found or unable to access repository.")
-            return
-
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Shortcut", style="dim", width=20)
-        table.add_column("Name", style="bold")
-        table.add_column("Description")
-
-        for template in templates:
-            shortcut = f"adk@{template['name']}"
-            table.add_row(shortcut, template["display_name"], template["description"])
-
-        console.print(table)
-        console.print(
-            "\n[dim]Usage: agent-starter-pack create <project-name> --agent adk@<template-name>[/]"
-        )
-
-    except Exception as e:
-        console.print(f"[red]Error fetching ADK templates: {e}[/]")
-        console.print(
-            "[yellow]You can still use ADK templates with the format: adk@<template-name>[/]"
-        )
-
-
-def fetch_adk_templates() -> list[dict[str, Any]]:
-    """Fetch available templates from adk-samples repository."""
-    templates = []
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_path = Path(temp_dir)
-
-        try:
-            # Clone the adk-samples repository
-            clone_cmd = [
-                "git",
-                "clone",
-                "--depth",
-                "1",
-                "--branch",
-                "main",
-                "https://github.com/google/adk-samples",
-                str(temp_path / "repo"),
-            ]
-
-            result = subprocess.run(
-                clone_cmd, capture_output=True, text=True, check=True
-            )
-
-            if result.returncode != 0:
-                logging.error(f"Failed to clone adk-samples: {result.stderr}")
-                return []
-
-            # Look for templates in python/agents directory
-            agents_dir = temp_path / "repo" / "python" / "agents"
-
-            if not agents_dir.exists():
-                logging.warning(f"Agents directory not found: {agents_dir}")
-                return []
-
-            # Scan for template configs
-            for agent_dir in agents_dir.iterdir():
-                if not agent_dir.is_dir():
-                    continue
-
-                # Look for template config
-                config_path = agent_dir / ".template" / "template_config.yaml"
-                if not config_path.exists():
-                    # Try legacy location
-                    config_path = agent_dir / ".templateconfig.yaml"
-
-                if config_path.exists():
-                    try:
-                        with open(config_path) as f:
-                            config = yaml.safe_load(f)
-
-                        template_info = {
-                            "name": agent_dir.name,
-                            "display_name": config.get("name", agent_dir.name),
-                            "description": config.get(
-                                "description", "No description available"
-                            ),
-                            "example_question": config.get("example_question", ""),
-                        }
-                        templates.append(template_info)
-
-                    except Exception as e:
-                        logging.warning(
-                            f"Error reading config for {agent_dir.name}: {e}"
-                        )
-                        continue
-
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Git command failed: {e}")
-            return []
-        except Exception as e:
-            logging.error(f"Unexpected error fetching templates: {e}")
-            return []
-
-    return sorted(templates, key=lambda x: x["name"])
