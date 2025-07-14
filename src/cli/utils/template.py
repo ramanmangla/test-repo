@@ -623,6 +623,7 @@ def process_template(
                     ".pytest_cache/*",
                     ".venv/*",
                     "*templates.py",  # Don't render templates files
+                    "Makefile",  # Don't render Makefile - handled by render_and_merge_makefiles
                     # Don't render agent.py unless it's agentic_rag
                     "app/agent.py" if agent_name != "agentic_rag" else "",
                 ],
