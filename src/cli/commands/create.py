@@ -15,7 +15,9 @@
 import logging
 import os
 import pathlib
+import shutil
 import subprocess
+import tempfile
 
 import click
 from click.core import ParameterSource
@@ -206,13 +208,22 @@ def create(
         if agent:
             if agent.startswith("local@"):
                 path_str = agent.split("@", 1)[1]
-                template_source_path = pathlib.Path(path_str).resolve()
-                if not template_source_path.is_dir():
+                local_path = pathlib.Path(path_str).resolve()
+                if not local_path.is_dir():
                     raise click.ClickException(
-                        f"Local path not found or not a directory: {template_source_path}"
+                        f"Local path not found or not a directory: {local_path}"
                     )
+
+                # Create a temporary directory and copy the local template to it
+                temp_dir = tempfile.mkdtemp(prefix="asp_local_template_")
+                template_source_path = pathlib.Path(temp_dir) / local_path.name
+                shutil.copytree(local_path, template_source_path)
+
                 selected_agent = f"local_{template_source_path.name}"
-                console.print(f"Using local template: {template_source_path}")
+                console.print(f"Using local template: {local_path}")
+                logging.debug(
+                    f"Copied local template to temporary dir: {template_source_path}"
+                )
             else:
                 # Check if it's a remote template specification
                 remote_spec = parse_agent_spec(agent)
@@ -481,10 +492,36 @@ def create(
                 remote_template_path=template_source_path,
                 remote_config=config if template_source_path else None,
             )
-        finally:
+
             # Replace region in all files if a different region was specified
             if region != "us-central1":
                 replace_region_in_files(project_path, region, debug=debug)
+        finally:
+            # Clean up the temporary directory if one was created
+            if template_source_path and "asp_remote_template_" in str(
+                template_source_path
+            ):
+                try:
+                    shutil.rmtree(template_source_path.parent)
+                    logging.debug(
+                        f"Successfully cleaned up temporary directory: {template_source_path.parent}"
+                    )
+                except OSError as e:
+                    logging.warning(
+                        f"Failed to clean up temporary directory {template_source_path.parent}: {e}"
+                    )
+            elif template_source_path and "asp_local_template_" in str(
+                template_source_path
+            ):
+                try:
+                    shutil.rmtree(template_source_path.parent)
+                    logging.debug(
+                        f"Successfully cleaned up temporary directory: {template_source_path.parent}"
+                    )
+                except OSError as e:
+                    logging.warning(
+                        f"Failed to clean up temporary directory {template_source_path.parent}: {e}"
+                    )
 
         project_path = destination_dir / project_name
         cd_path = project_path if output_dir else project_name

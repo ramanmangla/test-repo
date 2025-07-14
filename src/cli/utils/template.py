@@ -31,6 +31,7 @@ from src.cli.utils.version import get_current_version
 from .datastores import DATASTORES
 from .remote_template import (
     get_base_template_name,
+    render_and_merge_makefiles,
 )
 
 ADK_FILES = ["app/__init__.py"]
@@ -657,6 +658,15 @@ def process_template(
                     shutil.rmtree(final_destination)
                 shutil.copytree(output_dir, final_destination, dirs_exist_ok=True)
                 logging.debug(f"Project successfully created at {final_destination}")
+
+                # Special handling for Makefile merging
+                if is_remote and remote_template_path:
+                    render_and_merge_makefiles(
+                        base_template_path,
+                        remote_template_path,
+                        final_destination,
+                        cookiecutter_config,
+                    )
 
                 # Delete appropriate files based on ADK tag
                 if "adk" in tags:

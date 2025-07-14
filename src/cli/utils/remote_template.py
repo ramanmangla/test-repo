@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import yaml
+from jinja2 import Environment
 
 
 @dataclass
@@ -178,53 +179,6 @@ def fetch_remote_template(spec: RemoteTemplateSpec) -> pathlib.Path:
         ) from e
 
 
-def merge_makefiles(
-    base_makefile_path: pathlib.Path, remote_makefile_path: pathlib.Path
-) -> None:
-    """Merge the base Makefile into the remote Makefile.
-
-    Args:
-        base_makefile_path: Path to the base Makefile
-        remote_makefile_path: Path to the remote Makefile
-    """
-    with open(base_makefile_path) as f:
-        base_makefile_content = f.read()
-    with open(remote_makefile_path) as f:
-        remote_makefile_content = f.read()
-
-    base_commands = set(
-        re.findall(r"^([a-zA-Z0-9_-]+):", base_makefile_content, re.MULTILINE)
-    )
-    remote_commands = set(
-        re.findall(r"^([a-zA-Z0-9_-]+):", remote_makefile_content, re.MULTILINE)
-    )
-
-    missing_commands = base_commands - remote_commands
-
-    if not missing_commands:
-        return
-
-    # Build the string of missing commands to append
-    commands_to_append = ["\n# --- Commands from base template ---\n"]
-    for command in sorted(list(missing_commands)):
-        # Find the command block, excluding preceding comments, and append it.
-        # This regex looks for a pattern that starts with the command itself
-        # and ends at the start of the next command or the end of the file.
-        command_block_match = re.search(
-            rf"^{command}:.*?(?=\n\n(?:^#.*\n)*?^[a-zA-Z0-9_-]+:|" + r"\Z)",
-            base_makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        if command_block_match:
-            commands_to_append.append(command_block_match.group(0))
-            commands_to_append.append("\n\n")
-
-    # Append the missing commands to the remote Makefile in a single write operation
-    if len(commands_to_append) > 1:
-        with open(remote_makefile_path, "a") as f:
-            f.write("".join(commands_to_append))
-
-
 def load_remote_template_config(template_dir: pathlib.Path) -> dict[str, Any]:
     """Load template configuration from remote template.
 
@@ -288,3 +242,72 @@ def merge_template_configs(
 
     # Perform the deep merge
     return deep_merge(merged_config, remote_config)
+
+
+def render_and_merge_makefiles(
+    base_template_path: pathlib.Path,
+    remote_template_path: pathlib.Path,
+    final_destination: pathlib.Path,
+    cookiecutter_config: dict,
+) -> None:
+    """
+    Renders the base and remote Makefiles separately, then merges them.
+    """
+
+    env = Environment()
+
+    # Render the base Makefile
+    base_makefile_path = base_template_path / "Makefile"
+    if base_makefile_path.exists():
+        with open(base_makefile_path) as f:
+            base_template = env.from_string(f.read())
+        rendered_base_makefile = base_template.render(cookiecutter=cookiecutter_config)
+    else:
+        rendered_base_makefile = ""
+
+    # Render the remote Makefile
+    remote_makefile_path = remote_template_path / "Makefile"
+    if remote_makefile_path.exists():
+        with open(remote_makefile_path) as f:
+            remote_template = env.from_string(f.read())
+        rendered_remote_makefile = remote_template.render(
+            cookiecutter=cookiecutter_config
+        )
+    else:
+        rendered_remote_makefile = ""
+
+    # Merge the rendered Makefiles
+    if rendered_base_makefile and rendered_remote_makefile:
+        # A simple merge: remote content first, then append missing commands from base
+        base_commands = set(
+            re.findall(r"^([a-zA-Z0-9_-]+):", rendered_base_makefile, re.MULTILINE)
+        )
+        remote_commands = set(
+            re.findall(r"^([a-zA-Z0-9_-]+):", rendered_remote_makefile, re.MULTILINE)
+        )
+        missing_commands = base_commands - remote_commands
+
+        if missing_commands:
+            commands_to_append = ["\n\n# --- Commands from Agent Starter Pack ---\n\n"]
+            for command in sorted(missing_commands):
+                command_block_match = re.search(
+                    rf"^{command}:.*?(?=\n\n(?:^#.*\n)*?^[a-zA-Z0-9_-]+:|" + r"\Z)",
+                    rendered_base_makefile,
+                    re.MULTILINE | re.DOTALL,
+                )
+                if command_block_match:
+                    commands_to_append.append(command_block_match.group(0))
+                    commands_to_append.append("\n\n")
+
+            final_makefile_content = rendered_remote_makefile + "".join(commands_to_append)
+        else:
+            final_makefile_content = rendered_remote_makefile
+    elif rendered_remote_makefile:
+        final_makefile_content = rendered_remote_makefile
+    else:
+        final_makefile_content = rendered_base_makefile
+
+    # Write the final merged Makefile
+    with open(final_destination / "Makefile", "w") as f:
+        f.write(final_makefile_content)
+    logging.debug("Rendered and merged Makefile written to final destination.")
