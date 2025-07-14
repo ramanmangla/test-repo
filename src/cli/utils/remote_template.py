@@ -169,17 +169,6 @@ def fetch_remote_template(spec: RemoteTemplateSpec) -> pathlib.Path:
                 f"Template path not found in the repository: {spec.template_path}"
             )
 
-        # Exclude Makefile and README.md from remote template to avoid conflicts
-        makefile_path = template_dir / "Makefile"
-        if makefile_path.exists():
-            logging.debug(f"Removing Makefile from remote template: {makefile_path}")
-            makefile_path.unlink()
-
-        readme_path = template_dir / "README.md"
-        if readme_path.exists():
-            logging.debug(f"Removing README.md from remote template: {readme_path}")
-            readme_path.unlink()
-
         return template_dir
     except Exception as e:
         # Clean up on error
@@ -187,6 +176,53 @@ def fetch_remote_template(spec: RemoteTemplateSpec) -> pathlib.Path:
         raise RuntimeError(
             f"An unexpected error occurred after fetching remote template: {e}"
         ) from e
+
+
+def merge_makefiles(
+    base_makefile_path: pathlib.Path, remote_makefile_path: pathlib.Path
+) -> None:
+    """Merge the base Makefile into the remote Makefile.
+
+    Args:
+        base_makefile_path: Path to the base Makefile
+        remote_makefile_path: Path to the remote Makefile
+    """
+    with open(base_makefile_path) as f:
+        base_makefile_content = f.read()
+    with open(remote_makefile_path) as f:
+        remote_makefile_content = f.read()
+
+    base_commands = set(
+        re.findall(r"^([a-zA-Z0-9_-]+):", base_makefile_content, re.MULTILINE)
+    )
+    remote_commands = set(
+        re.findall(r"^([a-zA-Z0-9_-]+):", remote_makefile_content, re.MULTILINE)
+    )
+
+    missing_commands = base_commands - remote_commands
+
+    if not missing_commands:
+        return
+
+    # Build the string of missing commands to append
+    commands_to_append = ["\n# --- Commands from base template ---\n"]
+    for command in sorted(list(missing_commands)):
+        # Find the command block, excluding preceding comments, and append it.
+        # This regex looks for a pattern that starts with the command itself
+        # and ends at the start of the next command or the end of the file.
+        command_block_match = re.search(
+            rf"^{command}:.*?(?=\n\n(?:^#.*\n)*?^[a-zA-Z0-9_-]+:|" + r"\Z)",
+            base_makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        if command_block_match:
+            commands_to_append.append(command_block_match.group(0))
+            commands_to_append.append("\n\n")
+
+    # Append the missing commands to the remote Makefile in a single write operation
+    if len(commands_to_append) > 1:
+        with open(remote_makefile_path, "a") as f:
+            f.write("".join(commands_to_append))
 
 
 def load_remote_template_config(template_dir: pathlib.Path) -> dict[str, Any]:

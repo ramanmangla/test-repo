@@ -24,6 +24,7 @@ from src.cli.utils.remote_template import (
     fetch_remote_template,
     get_base_template_name,
     load_remote_template_config,
+    merge_makefiles,
     merge_template_configs,
     parse_agent_spec,
 )
@@ -120,49 +121,6 @@ class TestParseAgentSpec:
 
 
 class TestFetchRemoteTemplate:
-    @patch("subprocess.run")
-    @patch("tempfile.mkdtemp")
-    @patch("pathlib.Path.exists")
-    @patch("pathlib.Path.unlink")
-    def test_fetch_remote_template_success(
-        self,
-        mock_unlink: MagicMock,
-        mock_exists: MagicMock,
-        mock_mkdtemp: MagicMock,
-        mock_subprocess: MagicMock,
-    ) -> None:
-        """Test successful remote template fetching"""
-        mock_mkdtemp.return_value = "/tmp/test_dir"
-
-        mock_exists.side_effect = lambda: True
-        mock_subprocess.return_value = MagicMock(returncode=0, stderr="")
-
-        spec = RemoteTemplateSpec(
-            repo_url="https://github.com/org/repo",
-            template_path="path/to/template",
-            git_ref="main",
-        )
-
-        fetch_remote_template(spec)
-
-        # Verify git clone command
-        expected_cmd = [
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "--branch",
-            "main",
-            "https://github.com/org/repo",
-            "/tmp/test_dir/repo",
-        ]
-        mock_subprocess.assert_called_once()
-        args, _ = mock_subprocess.call_args
-        assert args[0] == expected_cmd
-
-        # Verify that unlink was called on the Makefile and README.md
-        assert mock_unlink.call_count == 2
-
     @patch("subprocess.run")
     @patch("tempfile.mkdtemp")
     @patch("shutil.rmtree")
@@ -462,3 +420,114 @@ class TestParseAgentSpecWithGitSuffix:
         assert spec.repo_url == "https://github.com/org/repo"
         assert spec.template_path == ""
         assert spec.git_ref == "main"
+
+
+class TestMergeMakefiles:
+    """Tests for the merge_makefiles function."""
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_merge_with_missing_commands_and_no_base_comments(
+        self, mock_file: MagicMock
+    ) -> None:
+        """Test that missing commands are appended, ignoring base comments."""
+        base_content = (
+            "# This is a comment for the install command\n"
+            "install:\n"
+            "\t@echo 'installing'\n\n"
+            "# This is a comment for the lint command\n"
+            "lint:\n"
+            "\t@echo 'linting'\n"
+        )
+        remote_content = "install:\n\t@echo 'remote-install'\n"
+
+        # Simulate reading the two Makefiles
+        mock_file().read.side_effect = [base_content, remote_content]
+
+        # Create mock file paths
+        base_path = pathlib.Path("base/Makefile")
+        remote_path = pathlib.Path("remote/Makefile")
+
+        # Run the function
+        merge_makefiles(base_path, remote_path)
+
+        # Check that the remote Makefile was opened for appending
+        mock_file.assert_any_call(remote_path, "a")
+        handle = mock_file()
+
+        # Check the content that was written
+        expected_write = "".join(
+            [
+                "\n# --- Commands from base template ---\n",
+                "lint:\n\t@echo 'linting'\n",
+                "\n\n",
+            ]
+        )
+        handle.write.assert_called_once_with(expected_write)
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_merge_with_no_missing_commands(self, mock_file: MagicMock) -> None:
+        """Test that nothing is written when no commands are missing."""
+        base_content = "install:\n\t@echo 'installing'\n"
+        remote_content = "install:\n\t@echo 'remote-install'\n"
+
+        mock_file().read.side_effect = [base_content, remote_content]
+
+        base_path = pathlib.Path("base/Makefile")
+        remote_path = pathlib.Path("remote/Makefile")
+
+        merge_makefiles(base_path, remote_path)
+
+        # The file should not be opened in append mode, so write should not be called
+        handle = mock_file()
+        handle.write.assert_not_called()
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_merge_with_empty_remote_makefile(self, mock_file: MagicMock) -> None:
+        """Test that all base commands are appended to an empty remote Makefile."""
+        base_content = "install:\n\t@echo 'installing'\n\nlint:\n\t@echo 'linting'\n"
+        remote_content = ""
+
+        mock_file().read.side_effect = [base_content, remote_content]
+
+        base_path = pathlib.Path("base/Makefile")
+        remote_path = pathlib.Path("remote/Makefile")
+
+        merge_makefiles(base_path, remote_path)
+
+        handle = mock_file()
+        expected_write = "".join(
+            [
+                "\n# --- Commands from base template ---\n",
+                "install:\n\t@echo 'installing'\n\n",
+                "lint:\n\t@echo 'linting'\n\n\n",
+            ]
+        )
+        handle.write.assert_called_once_with(expected_write)
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_merge_handles_complex_command_blocks(self, mock_file: MagicMock) -> None:
+        """Test merging with multi-line, complex command blocks."""
+        base_content = (
+            "setup-dev-env:\n"
+            "\tPROJECT_ID=$(gcloud config get-value project) && \\\n"
+            "\t(cd deployment/terraform/dev && terraform init && terraform apply --auto-approve)\n\n"
+            "test:\n"
+            "\t@echo 'running tests'\n"
+        )
+        remote_content = "test:\n\t@echo 'running remote tests'\n"
+
+        mock_file().read.side_effect = [base_content, remote_content]
+
+        base_path = pathlib.Path("base/Makefile")
+        remote_path = pathlib.Path("remote/Makefile")
+
+        merge_makefiles(base_path, remote_path)
+
+        handle = mock_file()
+        expected_write = (
+            "\n# --- Commands from base template ---\n"
+            "setup-dev-env:\n"
+            "\tPROJECT_ID=$(gcloud config get-value project) && \\\n"
+            "\t(cd deployment/terraform/dev && terraform init && terraform apply --auto-approve)\n\n"
+        )
+        handle.write.assert_called_once_with(expected_write)
