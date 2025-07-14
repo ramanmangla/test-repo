@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y wget sudo apt-transport-https ca-certif
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null && \
     # Install all packages at once
     apt-get update && \
-    apt-get install -y gh google-cloud-cli terraform && \
+    apt-get install -y gh google-cloud-cli terraform make && \
     # Clean up
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
