@@ -427,7 +427,9 @@ class TestRenderAndMergeMakefiles:
 
     @patch("pathlib.Path.exists")
     @patch("builtins.open", new_callable=mock_open)
-    def test_render_and_merge_with_missing_commands(self, mock_file: MagicMock, mock_exists: MagicMock) -> None:
+    def test_render_and_merge_with_missing_commands(
+        self, mock_file: MagicMock, mock_exists: MagicMock
+    ) -> None:
         """Test that missing commands are merged from base to remote."""
         base_content = (
             "install:\n"
@@ -460,7 +462,9 @@ class TestRenderAndMergeMakefiles:
         mock_file.assert_any_call(dest_path / "Makefile", "w")
 
         # Get the write calls to the destination file
-        write_calls = [call for call in mock_file.return_value.write.call_args_list if call[0]]
+        write_calls = [
+            call for call in mock_file.return_value.write.call_args_list if call[0]
+        ]
         assert len(write_calls) > 0
 
         # Verify the rendered content includes both remote and base commands
@@ -493,7 +497,9 @@ class TestRenderAndMergeMakefiles:
         render_and_merge_makefiles(base_path, remote_path, dest_path, config)
 
         # Get the write calls to the destination file
-        write_calls = [call for call in mock_file.return_value.write.call_args_list if call[0]]
+        write_calls = [
+            call for call in mock_file.return_value.write.call_args_list if call[0]
+        ]
         assert len(write_calls) > 0
 
         write_call = write_calls[0][0][0]
@@ -522,7 +528,9 @@ class TestRenderAndMergeMakefiles:
         render_and_merge_makefiles(base_path, remote_path, dest_path, config)
 
         # Get the write calls to the destination file
-        write_calls = [call for call in mock_file.return_value.write.call_args_list if call[0]]
+        write_calls = [
+            call for call in mock_file.return_value.write.call_args_list if call[0]
+        ]
         assert len(write_calls) > 0
 
         write_call = write_calls[0][0][0]
@@ -558,7 +566,9 @@ class TestRenderAndMergeMakefiles:
         render_and_merge_makefiles(base_path, remote_path, dest_path, config)
 
         # Get the write calls to the destination file
-        write_calls = [call for call in mock_file.return_value.write.call_args_list if call[0]]
+        write_calls = [
+            call for call in mock_file.return_value.write.call_args_list if call[0]
+        ]
         assert len(write_calls) > 0
 
         write_call = write_calls[0][0][0]
@@ -574,7 +584,10 @@ class TestRenderAndMergeMakefiles:
         """Test handling when base or remote Makefile doesn't exist."""
         # Test case: base exists, remote doesn't
         # Mock exists to return True for base Makefile, False for remote
-        mock_exists.side_effect = [True, False]  # First call (base) True, second (remote) False
+        mock_exists.side_effect = [
+            True,
+            False,
+        ]  # First call (base) True, second (remote) False
 
         mock_file.return_value.read.return_value = (
             "install:\n\t@echo 'installing {{cookiecutter.project_name}}'\n"
@@ -588,7 +601,9 @@ class TestRenderAndMergeMakefiles:
         render_and_merge_makefiles(base_path, remote_path, dest_path, config)
 
         # Get the write calls to the destination file
-        write_calls = [call for call in mock_file.return_value.write.call_args_list if call[0]]
+        write_calls = [
+            call for call in mock_file.return_value.write.call_args_list if call[0]
+        ]
         assert len(write_calls) > 0
 
         write_call = write_calls[0][0][0]

@@ -322,7 +322,7 @@ def create(
             if not datastore:
                 if auto_approve:
                     # Default to the first available datastore in non-interactive mode
-                    datastore = list(DATASTORES.keys())[0]
+                    datastore = next(iter(DATASTORES.keys()))
                     console.print(
                         f"Info: --datastore not specified. Defaulting to '{datastore}' in auto-approve mode.",
                         style="yellow",
@@ -340,7 +340,7 @@ def create(
                 include_data_ingestion = True
                 if not datastore:
                     if auto_approve:
-                        datastore = list(DATASTORES.keys())[0]
+                        datastore = next(iter(DATASTORES.keys()))
                         console.print(
                             f"Info: --datastore not specified. Defaulting to '{datastore}' in auto-approve mode.",
                             style="yellow",

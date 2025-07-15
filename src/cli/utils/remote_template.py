@@ -299,7 +299,9 @@ def render_and_merge_makefiles(
                     commands_to_append.append(command_block_match.group(0))
                     commands_to_append.append("\n\n")
 
-            final_makefile_content = rendered_remote_makefile + "".join(commands_to_append)
+            final_makefile_content = rendered_remote_makefile + "".join(
+                commands_to_append
+            )
         else:
             final_makefile_content = rendered_remote_makefile
     elif rendered_remote_makefile:
