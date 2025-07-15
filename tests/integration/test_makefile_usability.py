@@ -21,7 +21,6 @@ from datetime import datetime
 from rich.console import Console
 
 from tests.integration.utils import run_command
-from tests.utils.get_agents import get_test_combinations_to_run
 
 console = Console()
 TARGET_DIR = "target"
@@ -171,13 +170,14 @@ def get_makefile_test_combinations() -> list[tuple[str, str, list[str] | None]]:
         # adk_base - both deployment targets
         ("adk_base", "agent_engine", None),
         ("adk_base", "cloud_run", ["--session-type", "in_memory"]),
-        
         # agentic_rag - one variant
-        ("agentic_rag", "agent_engine", ["--include-data-ingestion", "--datastore", "vertex_ai_search"]),
-        
+        (
+            "agentic_rag",
+            "agent_engine",
+            ["--include-data-ingestion", "--datastore", "vertex_ai_search"],
+        ),
         # live_api - cloud_run only
         ("live_api", "cloud_run", None),
-        
         # langgraph_base_react - both deployment targets
         ("langgraph_base_react", "agent_engine", None),
         ("langgraph_base_react", "cloud_run", ["--session-type", "in_memory"]),
