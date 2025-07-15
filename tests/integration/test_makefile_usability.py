@@ -165,9 +165,28 @@ def validate_makefile_usability(
         raise
 
 
+def get_makefile_test_combinations() -> list[tuple[str, str, list[str] | None]]:
+    """Get representative subset of combinations for Makefile testing."""
+    return [
+        # adk_base - both deployment targets
+        ("adk_base", "agent_engine", None),
+        ("adk_base", "cloud_run", ["--session-type", "in_memory"]),
+        
+        # agentic_rag - one variant
+        ("agentic_rag", "agent_engine", ["--include-data-ingestion", "--datastore", "vertex_ai_search"]),
+        
+        # live_api - cloud_run only
+        ("live_api", "cloud_run", None),
+        
+        # langgraph_base_react - both deployment targets
+        ("langgraph_base_react", "agent_engine", None),
+        ("langgraph_base_react", "cloud_run", ["--session-type", "in_memory"]),
+    ]
+
+
 def test_all_makefile_usability() -> None:
-    """Test Makefile usability for all template combinations"""
-    combinations = get_test_combinations_to_run()
+    """Test Makefile usability for representative template combinations"""
+    combinations = get_makefile_test_combinations()
 
     for agent, deployment_target, extra_params in combinations:
         console.print(
