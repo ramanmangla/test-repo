@@ -204,6 +204,7 @@ def create(
         # Agent selection - handle remote templates
         selected_agent = None
         template_source_path = None
+        temp_dir_to_clean = None
 
         if agent:
             if agent.startswith("local@"):
@@ -216,6 +217,7 @@ def create(
 
                 # Create a temporary directory and copy the local template to it
                 temp_dir = tempfile.mkdtemp(prefix="asp_local_template_")
+                temp_dir_to_clean = temp_dir
                 template_source_path = pathlib.Path(temp_dir) / local_path.name
                 shutil.copytree(local_path, template_source_path)
 
@@ -235,7 +237,10 @@ def create(
                         )
                     else:
                         console.print(f"Fetching remote template: {agent}")
-                    template_source_path = fetch_remote_template(remote_spec)
+                    template_source_path, temp_dir_path = fetch_remote_template(
+                        remote_spec
+                    )
+                    temp_dir_to_clean = str(temp_dir_path)
                     selected_agent = f"remote_{hash(agent)}"  # Generate unique name for remote template
                 else:
                     # Handle local agent selection
@@ -498,29 +503,15 @@ def create(
                 replace_region_in_files(project_path, region, debug=debug)
         finally:
             # Clean up the temporary directory if one was created
-            if template_source_path and "asp_remote_template_" in str(
-                template_source_path
-            ):
+            if temp_dir_to_clean:
                 try:
-                    shutil.rmtree(template_source_path.parent)
+                    shutil.rmtree(temp_dir_to_clean)
                     logging.debug(
-                        f"Successfully cleaned up temporary directory: {template_source_path.parent}"
+                        f"Successfully cleaned up temporary directory: {temp_dir_to_clean}"
                     )
                 except OSError as e:
                     logging.warning(
-                        f"Failed to clean up temporary directory {template_source_path.parent}: {e}"
-                    )
-            elif template_source_path and "asp_local_template_" in str(
-                template_source_path
-            ):
-                try:
-                    shutil.rmtree(template_source_path.parent)
-                    logging.debug(
-                        f"Successfully cleaned up temporary directory: {template_source_path.parent}"
-                    )
-                except OSError as e:
-                    logging.warning(
-                        f"Failed to clean up temporary directory {template_source_path.parent}: {e}"
+                        f"Failed to clean up temporary directory {temp_dir_to_clean}: {e}"
                     )
 
         project_path = destination_dir / project_name

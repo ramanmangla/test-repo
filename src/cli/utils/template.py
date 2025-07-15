@@ -660,14 +660,15 @@ def process_template(
                 shutil.copytree(output_dir, final_destination, dirs_exist_ok=True)
                 logging.debug(f"Project successfully created at {final_destination}")
 
-                # Special handling for Makefile merging
-                if is_remote and remote_template_path:
-                    render_and_merge_makefiles(
-                        base_template_path,
-                        remote_template_path,
-                        final_destination,
-                        cookiecutter_config,
-                    )
+                # Render and merge Makefiles.
+                # If it's a local template, remote_template_path will be None,
+                # and only the base Makefile will be rendered.
+                render_and_merge_makefiles(
+                    base_template_path=base_template_path,
+                    final_destination=final_destination,
+                    cookiecutter_config=cookiecutter_config,
+                    remote_template_path=remote_template_path,
+                )
 
                 # Delete appropriate files based on ADK tag
                 if "adk" in tags:

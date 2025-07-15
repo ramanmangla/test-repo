@@ -113,7 +113,9 @@ def parse_agent_spec(agent_spec: str) -> RemoteTemplateSpec | None:
     return None
 
 
-def fetch_remote_template(spec: RemoteTemplateSpec) -> pathlib.Path:
+def fetch_remote_template(
+    spec: RemoteTemplateSpec,
+) -> tuple[pathlib.Path, pathlib.Path]:
     """Fetch remote template and return path to template directory.
 
     Uses Git to clone the remote repository.
@@ -122,7 +124,9 @@ def fetch_remote_template(spec: RemoteTemplateSpec) -> pathlib.Path:
         spec: Remote template specification
 
     Returns:
-        Path to the fetched template directory
+        A tuple containing:
+        - Path to the fetched template directory.
+        - Path to the top-level temporary directory that should be cleaned up.
     """
     temp_dir = tempfile.mkdtemp(prefix="asp_remote_template_")
     temp_path = pathlib.Path(temp_dir)
@@ -170,7 +174,7 @@ def fetch_remote_template(spec: RemoteTemplateSpec) -> pathlib.Path:
                 f"Template path not found in the repository: {spec.template_path}"
             )
 
-        return template_dir
+        return template_dir, temp_path
     except Exception as e:
         # Clean up on error
         shutil.rmtree(temp_path, ignore_errors=True)
@@ -246,12 +250,14 @@ def merge_template_configs(
 
 def render_and_merge_makefiles(
     base_template_path: pathlib.Path,
-    remote_template_path: pathlib.Path,
     final_destination: pathlib.Path,
     cookiecutter_config: dict,
+    remote_template_path: pathlib.Path | None = None,
 ) -> None:
     """
     Renders the base and remote Makefiles separately, then merges them.
+
+    If remote_template_path is not provided, only the base Makefile is rendered.
     """
 
     env = Environment()
@@ -265,16 +271,16 @@ def render_and_merge_makefiles(
     else:
         rendered_base_makefile = ""
 
-    # Render the remote Makefile
-    remote_makefile_path = remote_template_path / "Makefile"
-    if remote_makefile_path.exists():
-        with open(remote_makefile_path) as f:
-            remote_template = env.from_string(f.read())
-        rendered_remote_makefile = remote_template.render(
-            cookiecutter=cookiecutter_config
-        )
-    else:
-        rendered_remote_makefile = ""
+    # Render the remote Makefile if a path is provided
+    rendered_remote_makefile = ""
+    if remote_template_path:
+        remote_makefile_path = remote_template_path / "Makefile"
+        if remote_makefile_path.exists():
+            with open(remote_makefile_path) as f:
+                remote_template = env.from_string(f.read())
+            rendered_remote_makefile = remote_template.render(
+                cookiecutter=cookiecutter_config
+            )
 
     # Merge the rendered Makefiles
     if rendered_base_makefile and rendered_remote_makefile:

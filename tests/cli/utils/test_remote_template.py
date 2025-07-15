@@ -456,22 +456,25 @@ class TestRenderAndMergeMakefiles:
         config = {"project_name": "test_project"}
 
         # Run the function
-        render_and_merge_makefiles(base_path, remote_path, dest_path, config)
+        render_and_merge_makefiles(
+            base_template_path=base_path,
+            final_destination=dest_path,
+            cookiecutter_config=config,
+            remote_template_path=remote_path,
+        )
 
-        # Check that the final Makefile was written
-        mock_file.assert_any_call(dest_path / "Makefile", "w")
+        # Check that the final Makefile was written correctly
+        mock_file.assert_called_with(dest_path / "Makefile", "w")
+        handle = mock_file()
+        written_content = handle.write.call_args[0][0]
 
-        # Get the write calls to the destination file
-        write_calls = [
-            call for call in mock_file.return_value.write.call_args_list if call[0]
-        ]
-        assert len(write_calls) > 0
-
-        # Verify the rendered content includes both remote and base commands
-        write_call = write_calls[0][0][0]
-        assert "remote-install test_project" in write_call
-        assert "Commands from Agent Starter Pack" in write_call
-        assert "lint:" in write_call
+        # Assert that the remote install command is present
+        assert "remote-install test_project" in written_content
+        # Assert that the merged lint command is present
+        assert "lint:" in written_content
+        assert "@echo 'linting'" in written_content
+        # Assert that the base install command is NOT present
+        assert "@echo 'installing test_project'" not in written_content
 
     @patch("pathlib.Path.exists")
     @patch("builtins.open", new_callable=mock_open)
@@ -494,7 +497,12 @@ class TestRenderAndMergeMakefiles:
         dest_path = pathlib.Path("destination")
         config = {"project_name": "test_project"}
 
-        render_and_merge_makefiles(base_path, remote_path, dest_path, config)
+        render_and_merge_makefiles(
+            base_template_path=base_path,
+            final_destination=dest_path,
+            cookiecutter_config=config,
+            remote_template_path=remote_path,
+        )
 
         # Get the write calls to the destination file
         write_calls = [
@@ -525,7 +533,12 @@ class TestRenderAndMergeMakefiles:
         dest_path = pathlib.Path("destination")
         config = {"project_name": "test_project"}
 
-        render_and_merge_makefiles(base_path, remote_path, dest_path, config)
+        render_and_merge_makefiles(
+            base_template_path=base_path,
+            final_destination=dest_path,
+            cookiecutter_config=config,
+            remote_template_path=remote_path,
+        )
 
         # Get the write calls to the destination file
         write_calls = [
@@ -563,7 +576,12 @@ class TestRenderAndMergeMakefiles:
         dest_path = pathlib.Path("destination")
         config = {"project_name": "test_project"}
 
-        render_and_merge_makefiles(base_path, remote_path, dest_path, config)
+        render_and_merge_makefiles(
+            base_template_path=base_path,
+            final_destination=dest_path,
+            cookiecutter_config=config,
+            remote_template_path=remote_path,
+        )
 
         # Get the write calls to the destination file
         write_calls = [
@@ -598,7 +616,12 @@ class TestRenderAndMergeMakefiles:
         dest_path = pathlib.Path("destination")
         config = {"project_name": "test_project"}
 
-        render_and_merge_makefiles(base_path, remote_path, dest_path, config)
+        render_and_merge_makefiles(
+            base_template_path=base_path,
+            final_destination=dest_path,
+            cookiecutter_config=config,
+            remote_template_path=remote_path,
+        )
 
         # Get the write calls to the destination file
         write_calls = [
