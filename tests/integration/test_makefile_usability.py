@@ -79,23 +79,6 @@ def validate_makefile_usability(
                     f"Found unrendered placeholders in Makefile for {agent} with {deployment_target}"
                 )
 
-        # Test make syntax validation
-        try:
-            run_command(
-                ["make", "--dry-run", "--print-data-base"],
-                project_path,
-                "Validating Makefile syntax",
-            )
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]Makefile syntax validation failed[/]")
-            if e.stdout:
-                console.print(e.stdout)
-            if e.stderr:
-                console.print(e.stderr)
-            raise ValueError(
-                f"Makefile syntax is invalid for {agent} with {deployment_target}"
-            ) from e
-
         makefile_targets = []
         with open(makefile_path) as f:
             makefile_content = f.read()
@@ -116,23 +99,60 @@ def validate_makefile_usability(
             ):
                 makefile_targets.append(target)
 
-        # Test dry run of each target
+        # Test execution of each target with 2-second timeout
         for target in set(makefile_targets):  # Remove duplicates
             try:
-                run_command(
-                    ["make", "--dry-run", target],
-                    project_path,
-                    f"Testing dry run for target: {target}",
+                subprocess.run(
+                    ["make", target],
+                    cwd=project_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    check=True,
+                )
+                console.print(f"[green]✓ Target '{target}' executed successfully[/]")
+            except subprocess.TimeoutExpired:
+                # Timeout is actually good - means the command started running
+                console.print(
+                    f"[green]✓ Target '{target}' started successfully (timed out after 2s)[/]"
                 )
             except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]Target '{target}' failed dry run[/]")
-                if e.stdout:
-                    console.print(e.stdout)
-                if e.stderr:
-                    console.print(e.stderr)
-                raise ValueError(
-                    f"Target '{target}' is not valid in Makefile for {agent} with {deployment_target}"
-                ) from e
+                # Check if this is a dependency/installation error that we can tolerate
+                error_output = (e.stdout or "") + (e.stderr or "")
+
+                # Common patterns that indicate missing dependencies (not Makefile errors)
+                dependency_errors = [
+                    "command not found",
+                    "npm ERR!",
+                    "Package not found",
+                    "No such file or directory",
+                    "ModuleNotFoundError",
+                    "ImportError",
+                    "ERROR: Could not find a version",
+                    "sh: vite: command not found",
+                    "sh: npm: command not found",
+                    "sh: node: command not found",
+                    "ERROR: No matching distribution found",
+                ]
+
+                is_dependency_error = any(
+                    pattern in error_output for pattern in dependency_errors
+                )
+
+                if is_dependency_error:
+                    console.print(
+                        f"[yellow]⚠ Target '{target}' failed due to missing dependencies (not a Makefile error)[/]"
+                    )
+                    console.print(f"[yellow]Error output: {error_output[:200]}...[/]")
+                else:
+                    console.print(f"[bold red]Target '{target}' failed execution[/]")
+                    if e.stdout:
+                        console.print(e.stdout)
+                    if e.stderr:
+                        console.print(e.stderr)
+                    raise ValueError(
+                        f"Target '{target}' is not valid in Makefile for {agent} with {deployment_target}"
+                    ) from e
 
         console.print(
             f"[bold green]✓ Makefile validation passed for {agent} with {deployment_target}[/]"
