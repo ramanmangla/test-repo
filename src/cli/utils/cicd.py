@@ -125,7 +125,8 @@ def create_github_connection(
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-        , encoding="utf-8")
+            encoding="utf-8",
+        )
 
         # Send 'y' followed by enter key to handle both the API enablement prompt and any other prompts
         stdout, stderr = process.communicate(input="y\n")
@@ -485,7 +486,8 @@ def handle_github_authentication() -> None:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-            , encoding="utf-8")
+                encoding="utf-8",
+            )
             stdout, stderr = process.communicate(input=token + "\n")
 
             if process.returncode != 0:

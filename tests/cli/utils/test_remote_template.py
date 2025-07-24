@@ -193,7 +193,9 @@ settings:
 
         with (
             patch("pathlib.Path.exists", return_value=True),
-            patch("builtins.open", mock_open(read_data=config_content, encoding="utf-8")),
+            patch(
+                "builtins.open", mock_open(read_data=config_content, encoding="utf-8")
+            ),
         ):
             result = load_remote_template_config(template_dir)
 
@@ -219,7 +221,10 @@ settings:
 
         with (
             patch("pathlib.Path.exists", return_value=True),
-            patch("builtins.open", mock_open(read_data="invalid: yaml: content:", encoding="utf-8")),
+            patch(
+                "builtins.open",
+                mock_open(read_data="invalid: yaml: content:", encoding="utf-8"),
+            ),
         ):
             result = load_remote_template_config(template_dir)
 
@@ -314,8 +319,9 @@ base_template: adk_base
 settings:
   requires_data_ingestion: true
   deployment_targets: ["cloud_run"]
-"""
-                , encoding="utf-8"),
+""",
+                    encoding="utf-8",
+                ),
             ),
         ):
             # Parse ADK samples spec

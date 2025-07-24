@@ -66,7 +66,8 @@ def start_server() -> subprocess.Popen[str]:
         text=True,
         bufsize=1,
         env=env,
-    , encoding="utf-8")
+        encoding="utf-8",
+    )
 
     # Start threads to log stdout and stderr in real-time
     threading.Thread(

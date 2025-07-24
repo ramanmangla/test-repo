@@ -194,7 +194,8 @@ def run_command(
                 stderr=None,
                 text=True,
                 bufsize=1,
-            , encoding="utf-8")
+                encoding="utf-8",
+            )
 
             # Wait for process to complete
             returncode = process.wait()

@@ -666,7 +666,9 @@ def process_template(
                 ],
             }
 
-            with open(cookiecutter_template / "cookiecutter.json", "w", encoding="utf-8") as f:
+            with open(
+                cookiecutter_template / "cookiecutter.json", "w", encoding="utf-8"
+            ) as f:
                 json.dump(cookiecutter_config, f, indent=4)
 
             logging.debug(f"Template structure created at {cookiecutter_template}")
