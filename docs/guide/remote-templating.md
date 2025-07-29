@@ -159,20 +159,19 @@ This allows you to completely customize the `Makefile` while still inheriting th
 
 ## Customizing Infrastructure with Terraform
 
-You can customize the generated agent's infrastructure by adding or replacing Terraform files in your remote template.
+You can customize the generated agent's infrastructure by adding or replacing Terraform files in your remote template. The templating engine follows a simple rule: your remote template's files take precedence over the base template's files.
 
-The templating engine follows a simple rule: your remote template's files take precedence.
--   **Adding New Files:** To add a new Terraform file (e.g., for a custom resource), simply place it in the desired directory, such as `deployment/terraform/` or `deployment/terraform/dev/`.
--   **Overriding Base Files:** To completely replace a file from the base template (e.g., to change the default storage configuration), create a file with the **exact same name** (e.g., `storage.tf`) in the corresponding directory of your remote template. Your version of the file will be used instead of the base one.
+-   **Adding New Files:** To add a new Terraform file (e.g., for a custom resource), simply place it in the desired directory.
+-   **Overriding Base Files:** To completely replace a file from the base template (e.g., to change the default storage configuration), create a file with the **exact same name** in the corresponding directory of your remote template. Your version of the file will be used instead of the base one.
 
 ### Environment-Specific Configuration
 
-The starter pack uses a directory-based approach for managing different deployment environments (like `dev`, `staging`, and `prod`). You can provide environment-specific Terraform configurations by creating subdirectories that match the environment name.
+The starter pack uses a directory-based approach for managing different deployment environments. The Terraform configurations are split between production/staging and development.
 
--   **Base Configuration:** Files in `deployment/terraform/` are common to all environments.
--   **Environment-Specific Files:** Files in `deployment/terraform/<environment>/` (e.g., `deployment/terraform/dev/`) are specific to that environment.
+-   **Production/Staging Configuration:** Files in `deployment/terraform/` define the infrastructure for your `staging` and `prod` environments.
+-   **Development Configuration:** Files in `deployment/terraform/dev/` define the infrastructure for your `dev` environment. This configuration is typically simpler and uses fewer resources to save costs.
 
-This allows you to, for example, use smaller machine types in `dev` by replacing the `service.tf` file in the `deployment/terraform/dev/` directory.
+When you create a remote template, you can override files in either of these directories. For example, to change the machine type for your production Cloud Run service, you would replace `deployment/terraform/service.tf`. To change it for your development environment, you would replace `deployment/terraform/dev/service.tf`.
 
 **Example Structure:**
 ```
@@ -182,9 +181,9 @@ my-terraform-template/
 ├── pyproject.toml
 └── deployment/
     └── terraform/
-        ├── custom_resources.tf # Adds new resources, common to all environments
+        ├── service.tf      # Replaces the base service.tf for 'staging' and 'prod'
         └── dev/
-            └── storage.tf      # Replaces the base storage.tf ONLY for the 'dev' environment
+            └── service.tf  # Replaces the base service.tf ONLY for the 'dev' environment
 ```
 
 For a complete list of configurable infrastructure variables, see the [Deployment guide](./deployment.md).
