@@ -104,7 +104,7 @@ def shared_template_options(f: Callable) -> Callable:
     return f
 
 
-def get_available_base_templates():
+def get_available_base_templates() -> list[str]:
     """Get list of available base templates for inheritance.
 
     Returns:
@@ -127,7 +127,7 @@ def validate_base_template(base_template: str) -> bool:
     return base_template in available_templates
 
 
-def get_standard_ignore_patterns():
+def get_standard_ignore_patterns() -> Callable[[str, list[str]], list[str]]:
     """Get standard ignore patterns for copying directories.
 
     Returns:
@@ -154,7 +154,7 @@ def get_standard_ignore_patterns():
         ".cache",
     }
 
-    def ignore_patterns(dir, files):
+    def ignore_patterns(dir: str, files: list[str]) -> list[str]:
         return [f for f in files if f in exclude_dirs or f.startswith(".backup_")]
 
     return ignore_patterns
