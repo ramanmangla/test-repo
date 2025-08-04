@@ -35,7 +35,7 @@ from src.cli.utils.cicd import (
 console = Console()
 
 
-def display_intro_message() -> None:
+def display_intro_message(cicd_runner: str) -> None:
     """Display introduction and warning messages about the setup-cicd command."""
     console.print(
         "\n⚠️  WARNING: The setup-cicd command is experimental and may have unexpected behavior.",
@@ -48,7 +48,10 @@ def display_intro_message() -> None:
         "This command helps set up a basic CI/CD pipeline for development and testing purposes."
     )
     console.print("It will:")
-    console.print("- Create a GitHub repository and connect it to Cloud Build")
+    if cicd_runner == "github_actions":
+        console.print("- Create a GitHub repository and set up GitHub Actions")
+    else:
+        console.print("- Create a GitHub repository and connect it to Cloud Build")
     console.print("- Set up development environment infrastructure")
     console.print("- Configure basic CI/CD triggers for PR checks and deployments")
     console.print(
@@ -171,10 +174,10 @@ def setup_git_repository(config: ProjectConfig) -> str:
         f"https://github.com/{config.repository_owner}/{config.repository_name}.git"
     )
     try:
-        run_command(
+        existing_url = run_command(
             ["git", "remote", "get-url", "origin"], capture_output=True, check=True
-        )
-        console.print("✅ Git remote already configured")
+        ).stdout.strip()
+        console.print(f"✅ Git remote already configured: {existing_url}")
     except subprocess.CalledProcessError:
         try:
             run_command(
@@ -513,7 +516,10 @@ def setup_cicd(
         "This command helps set up a basic CI/CD pipeline for development and testing purposes."
     )
     console.print("It will:")
-    console.print("- Create a GitHub repository and connect it to Cloud Build")
+    if cicd_runner == "github_actions":
+        console.print("- Create a GitHub repository and set up GitHub Actions")
+    else:
+        console.print("- Create a GitHub repository and connect it to Cloud Build")
     console.print("- Set up development environment infrastructure")
     console.print("- Configure basic CI/CD triggers for PR checks and deployments")
     console.print(
@@ -541,7 +547,10 @@ def setup_cicd(
         "This command helps set up a basic CI/CD pipeline for development and testing purposes."
     )
     console.print("It will:")
-    console.print("- Create a GitHub repository and connect it to Cloud Build")
+    if cicd_runner == "github_actions":
+        console.print("- Create a GitHub repository and set up GitHub Actions")
+    else:
+        console.print("- Create a GitHub repository and connect it to Cloud Build")
     console.print("- Set up development environment infrastructure")
     console.print("- Configure basic CI/CD triggers for PR checks and deployments")
     console.print(
