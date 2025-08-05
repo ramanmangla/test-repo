@@ -99,7 +99,7 @@ make backend
 
 ### Stage 2: Set Up the Path to Production with CI/CD
 
-After iterating in your personal cloud environment, the next step is to establish a complete, automated CI/CD pipeline that deploys your agent through staging and into production.
+Once you've refined your agent in the development environment, the next stage is to set up a fully automated CI/CD pipeline for seamless deployment through staging and into production.
 
 #### Option 1: Automated CI/CD Setup
 
