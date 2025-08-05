@@ -81,6 +81,11 @@ gcloud config set project YOUR_DEV_PROJECT_ID
 **ii. Provision Cloud Resources**
 
 This command uses Terraform to set up the necessary cloud resources for your dev environment.
+
+::: tip Optional Step
+This step is recommended to create a development environment that closely mirrors production (including dedicated service accounts and IAM permissions). However, for simple deployments, you can consider this step optional and proceed directly to deploying the backend if you have sufficient permissions.
+:::
+
 ```bash
 make setup-dev-env
 ```
