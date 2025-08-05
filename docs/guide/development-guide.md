@@ -62,28 +62,41 @@ make install && make playground
 
 ## 2. Deploy to the Cloud
 
-Once you're satisfied with local testing, you are ready to deploy your agent to Google Cloud.
+Once you're satisfied with local testing, you are ready to deploy your agent to Google Cloud. The process involves two main stages: first, deploying to a hands-on development environment for quick iteration, and second, setting up a formal CI/CD pipeline for staging and production.
+
 *All `make` commands should be run from the root of your agent project (`my-awesome-agent`).*
-### A. Cloud Development Environment Setup
-First, provision a non-production environment in the cloud for remote testing.
+
+### Stage 1: Deploy to a Cloud Development Environment
+
+This initial stage is for provisioning a non-production environment in the cloud for remote testing and iteration.
+
 **i. Set Google Cloud Project**
+
 Configure `gcloud` to target your development project.
 ```bash
 # Replace YOUR_DEV_PROJECT_ID with your actual Google Cloud Project ID
 gcloud config set project YOUR_DEV_PROJECT_ID
 ```
+
 **ii. Provision Cloud Resources**
-This command uses Terraform to set up necessary cloud resources for your dev environment.
+
+This command uses Terraform to set up the necessary cloud resources for your dev environment.
 ```bash
 make setup-dev-env
 ```
+
 **iii. Deploy Agent Backend**
+
 Build and deploy your agent's backend to the dev environment.
 ```bash
 make backend
 ```
 
-### Option 1: Automated CI/CD Setup
+### Stage 2: Set Up the Path to Production with CI/CD
+
+After iterating in your personal cloud environment, the next step is to establish a complete, automated CI/CD pipeline that deploys your agent through staging and into production.
+
+#### Option 1: Automated CI/CD Setup
 
 From the root of your agent project (`my-awesome-agent`), run:
 ```bash
@@ -92,17 +105,18 @@ agent-starter-pack setup-cicd
 This single command handles everything:
 - Creates a GitHub repository.
 - Connects it to your chosen CI/CD provider (Google Cloud Build or GitHub Actions).
-- Provisions all necessary infrastructure for your staging and production environments using Terraform.
+- Provisions all necessary infrastructure for your **staging and production environments** using Terraform.
 - Configures the deployment triggers.
 
 For a detailed walkthrough, see the [**`setup-cicd` CLI reference**](../cli/setup_cicd).
 
-### Option 2: Manual CI/CD Setup
+#### Option 2: Manual CI/CD Setup
 
-For full control or for other Git providers, refer to the [manual deployment setup guide](./deployment.md).
+For full control or for use with other Git providers, refer to the [manual deployment setup guide](./deployment.md).
 
-### Trigger Your First Deployment
-After the CI/CD setup is complete, commit and push your code to trigger the pipeline.
+#### Trigger Your First Deployment
+
+After the CI/CD setup is complete, commit and push your code to trigger the pipeline. This will deploy your agent to the staging environment first.
 ```bash
 git add -A
 git config --global user.email "you@example.com" # If not already configured
