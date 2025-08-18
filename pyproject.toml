@@ -1,6 +1,6 @@
 [project]
 name = "agent-starter-pack"
-version = "0.12.0"
+version = "0.12.1"
 description = "CLI to bootstrap production-ready Google Cloud GenAI agent projects from templates."
 authors = [
     { name = "Google LLC", email = "agent-starter-pack@google.com" },
@@ -15,6 +15,7 @@ dependencies = [
     "rich>=13.7.0",
     "pyyaml>=6.0.1",
     "backoff>=2.2.1",
+    "tomli>=1.2.0",
 ]
 
 [dependency-groups]
