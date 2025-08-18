@@ -15,7 +15,7 @@ dependencies = [
     "rich>=13.7.0",
     "pyyaml>=6.0.1",
     "backoff>=2.2.1",
-    "tomli>=1.2.0",
+    "tomli>=1.1.0; python_version < \"3.11\"",
 ]
 
 [dependency-groups]
@@ -89,7 +89,7 @@ select = [
     "RUF", # ruff specific rules
     "PLW1514", # unspecified-encoding (require encoding in open calls)
 ]
-ignore = ["E501", "C901", "RUF001"]
+ignore = ["E501", "C901", "RUF001", "UP036"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "frontend"]
